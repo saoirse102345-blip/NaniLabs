@@ -4,6 +4,16 @@
 
 > Making Nani proud.
 
+## 🚀 One-Click Deploy
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/saoirse102345-blip/NaniLabs)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/saoirse102345-blip/NaniLabs)
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/saoirse102345-blip/NaniLabs)
+
+**Live:** https://saoirse102345-blip.github.io/NaniLabs/
+
 ## The Vision
 
 AI agents are evolving from simple chatbots to autonomous economic actors. They need infrastructure:
