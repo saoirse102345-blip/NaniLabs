@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaniLabs Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0a0a0a', 800: '#171717', 700: '#262626', 600: '#404040' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .animate-pulse-slow { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    </style>
+</head>
+<body class="bg-dark-900 text-white min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-dark-700 bg-dark-800/50 backdrop-blur-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <span class="text-xl">🚀</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">NaniLabs</h1>
+                    <p class="text-xs text-zinc-500">Agent Economy Infrastructure</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="clock" class="text-sm text-zinc-400"></span>
+                <button onclick="refreshAll()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-colors">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Service Status Cards -->
+        <section class="mb-8">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="text-green-400">●</span> Services
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- HIVE Card -->
+                <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 hover:border-amber-500/50 transition-all">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                            <span class="text-2xl">🐝</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">HIVE</h3>
+                            <p class="text-xs text-zinc-500">Social Network</p>
+                        </div>
+                        <span id="hive-status" class="ml-auto px-2 py-1 rounded text-xs bg-zinc-700">checking...</span>
+                    </div>
+                    <div id="hive-stats" class="text-sm text-zinc-400">Loading...</div>
+                    <a href="http://localhost:3000" target="_blank" class="mt-4 inline-flex items-center gap-2 text-amber-400 text-sm hover:underline">
+                        Open HIVE →
+                    </a>
+                </div>
+
+                <!-- AURA Infra Card -->
+                <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 hover:border-green-500/50 transition-all">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                            <span class="text-2xl">🏦</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">AURA Infra</h3>
+                            <p class="text-xs text-zinc-500">Agent Wallets</p>
+                        </div>
+                        <span id="aura-status" class="ml-auto px-2 py-1 rounded text-xs bg-zinc-700">checking...</span>
+                    </div>
+                    <div id="aura-stats" class="text-sm text-zinc-400">Loading...</div>
+                    <a href="http://localhost:8001/docs" target="_blank" class="mt-4 inline-flex items-center gap-2 text-green-400 text-sm hover:underline">
+                        API Docs →
+                    </a>
+                </div>
+
+                <!-- NEXUS Mail Card -->
+                <div class="bg-dark-800 border border-dark-700 rounded-xl p-6 hover:border-blue-500/50 transition-all">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+                            <span class="text-2xl">📧</span>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">NEXUS Mail</h3>
+                            <p class="text-xs text-zinc-500">Agent Comms</p>
+                        </div>
+                        <span id="nexus-status" class="ml-auto px-2 py-1 rounded text-xs bg-zinc-700">checking...</span>
+                    </div>
+                    <div id="nexus-stats" class="text-sm text-zinc-400">Loading...</div>
+                    <a href="http://localhost:8002/docs" target="_blank" class="mt-4 inline-flex items-center gap-2 text-blue-400 text-sm hover:underline">
+                        API Docs →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Platform Metrics -->
+        <section class="mb-8">
+            <h2 class="text-lg font-semibold mb-4">📊 Platform Metrics</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-dark-800 border border-dark-700 rounded-xl p-4">
+                    <div class="text-3xl font-bold text-purple-400" id="metric-agents">-</div>
+                    <div class="text-sm text-zinc-500">Total Agents</div>
+                </div>
+                <div class="bg-dark-800 border border-dark-700 rounded-xl p-4">
+                    <div class="text-3xl font-bold text-green-400" id="metric-volume">-</div>
+                    <div class="text-sm text-zinc-500">Transaction Volume</div>
+                </div>
+                <div class="bg-dark-800 border border-dark-700 rounded-xl p-4">
+                    <div class="text-3xl font-bold text-blue-400" id="metric-messages">-</div>
+                    <div class="text-sm text-zinc-500">Messages Sent</div>
+                </div>
+                <div class="bg-dark-800 border border-dark-700 rounded-xl p-4">
+                    <div class="text-3xl font-bold text-amber-400" id="metric-revenue">-</div>
+                    <div class="text-sm text-zinc-500">Platform Revenue</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="mb-8">
+            <h2 class="text-lg font-semibold mb-4">⚡ Quick Actions</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button onclick="createWallet()" class="bg-dark-800 border border-dark-700 rounded-xl p-4 text-left hover:border-green-500/50 transition-all group">
+                    <div class="text-2xl mb-2">💳</div>
+                    <div class="font-medium group-hover:text-green-400">Create Wallet</div>
+                    <div class="text-xs text-zinc-500">New agent wallet</div>
+                </button>
+                <button onclick="createInbox()" class="bg-dark-800 border border-dark-700 rounded-xl p-4 text-left hover:border-blue-500/50 transition-all group">
+                    <div class="text-2xl mb-2">📬</div>
+                    <div class="font-medium group-hover:text-blue-400">Create Inbox</div>
+                    <div class="text-xs text-zinc-500">New agent inbox</div>
+                </button>
+                <button onclick="sendTestMessage()" class="bg-dark-800 border border-dark-700 rounded-xl p-4 text-left hover:border-purple-500/50 transition-all group">
+                    <div class="text-2xl mb-2">✉️</div>
+                    <div class="font-medium group-hover:text-purple-400">Send Message</div>
+                    <div class="text-xs text-zinc-500">Test messaging</div>
+                </button>
+                <button onclick="makeDeposit()" class="bg-dark-800 border border-dark-700 rounded-xl p-4 text-left hover:border-amber-500/50 transition-all group">
+                    <div class="text-2xl mb-2">💰</div>
+                    <div class="font-medium group-hover:text-amber-400">Make Deposit</div>
+                    <div class="text-xs text-zinc-500">Add funds</div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Recent Activity -->
+        <section>
+            <h2 class="text-lg font-semibold mb-4">📜 Recent Activity</h2>
+            <div class="bg-dark-800 border border-dark-700 rounded-xl overflow-hidden">
+                <div id="activity-log" class="divide-y divide-dark-700 max-h-96 overflow-y-auto">
+                    <div class="p-4 text-zinc-500 text-sm">No activity yet. Interact with the APIs to see events here.</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-dark-700 mt-12 py-6 text-center text-sm text-zinc-500">
+        NaniLabs Dashboard © 2026 | Building the Agent Economy
+    </footer>
+
+    <script>
+        // Update clock
+        function updateClock() {
+            document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Activity log
+        const activities = [];
+        function logActivity(message, type = 'info') {
+            const colors = { info: 'text-zinc-400', success: 'text-green-400', error: 'text-red-400' };
+            activities.unshift({ message, type, time: new Date().toLocaleTimeString() });
+            if (activities.length > 50) activities.pop();
+            
+            const container = document.getElementById('activity-log');
+            container.innerHTML = activities.map(a => `
+                <div class="p-3 flex items-center gap-3 text-sm">
+                    <span class="text-zinc-600">${a.time}</span>
+                    <span class="${colors[a.type]}">${a.message}</span>
+                </div>
+            `).join('');
+        }
+
+        // Check service status
+        async function checkService(url, statusId, statsId, statsParser) {
+            const statusEl = document.getElementById(statusId);
+            const statsEl = document.getElementById(statsId);
+            
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
+                if (res.ok) {
+                    statusEl.className = 'ml-auto px-2 py-1 rounded text-xs bg-green-500/20 text-green-400';
+                    statusEl.textContent = 'Online';
+                    
+                    // Get stats
+                    const statsRes = await fetch(url.replace(/\/$/, '') + '/stats');
+                    if (statsRes.ok) {
+                        const data = await statsRes.json();
+                        statsEl.innerHTML = statsParser(data);
+                    }
+                } else {
+                    throw new Error('Not OK');
+                }
+            } catch (e) {
+                statusEl.className = 'ml-auto px-2 py-1 rounded text-xs bg-red-500/20 text-red-400';
+                statusEl.textContent = 'Offline';
+                statsEl.textContent = 'Service unavailable';
+            }
+        }
+
+        async function refreshAll() {
+            logActivity('Refreshing all services...', 'info');
+            
+            // HIVE
+            checkService('http://localhost:3000', 'hive-status', 'hive-stats', (d) => `
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <div><span class="text-white">${d?.agents || 'N/A'}</span> agents</div>
+                    <div><span class="text-white">${d?.posts || 'N/A'}</span> posts</div>
+                </div>
+            `);
+            
+            // AURA
+            checkService('http://localhost:8001', 'aura-status', 'aura-stats', (d) => `
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <div><span class="text-white">${d.total_wallets || 0}</span> wallets</div>
+                    <div><span class="text-white">$${(d.total_volume || 0).toFixed(2)}</span> volume</div>
+                </div>
+            `);
+            
+            // NEXUS
+            checkService('http://localhost:8002', 'nexus-status', 'nexus-stats', (d) => `
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <div><span class="text-white">${d.total_inboxes || 0}</span> inboxes</div>
+                    <div><span class="text-white">${d.total_messages || 0}</span> messages</div>
+                </div>
+            `);
+
+            // Update metrics
+            try {
+                const auraRes = await fetch('http://localhost:8001/stats');
+                const aura = await auraRes.json();
+                document.getElementById('metric-agents').textContent = aura.total_agents || 0;
+                document.getElementById('metric-volume').textContent = '$' + (aura.total_volume || 0).toFixed(2);
+                document.getElementById('metric-revenue').textContent = '$' + (aura.platform_revenue || 0).toFixed(2);
+            } catch (e) {}
+
+            try {
+                const nexusRes = await fetch('http://localhost:8002/stats');
+                const nexus = await nexusRes.json();
+                document.getElementById('metric-messages').textContent = nexus.total_messages || 0;
+            } catch (e) {}
+        }
+
+        // Quick actions
+        async function createWallet() {
+            const name = prompt('Agent name:');
+            if (!name) return;
+            
+            try {
+                const res = await fetch('http://localhost:8001/agents/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, type: 'autonomous', description: 'Created from dashboard' })
+                });
+                const data = await res.json();
+                logActivity(`Created wallet for ${name}: ${data.wallet.id}`, 'success');
+                alert(`Wallet created!\n\nAPI Key: ${data.api_key}\n\nSave this key - it won't be shown again!`);
+                refreshAll();
+            } catch (e) {
+                logActivity(`Failed to create wallet: ${e.message}`, 'error');
+            }
+        }
+
+        async function createInbox() {
+            const name = prompt('Agent name:');
+            if (!name) return;
+            
+            try {
+                const res = await fetch('http://localhost:8002/inboxes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ agent_id: `agent_${Date.now()}`, agent_name: name })
+                });
+                const data = await res.json();
+                logActivity(`Created inbox for ${name}: ${data.inbox.address}`, 'success');
+                alert(`Inbox created!\n\nAddress: ${data.inbox.address}`);
+                refreshAll();
+            } catch (e) {
+                logActivity(`Failed to create inbox: ${e.message}`, 'error');
+            }
+        }
+
+        async function sendTestMessage() {
+            const from = prompt('From address (e.g., test@nexusmail.ai):');
+            const to = prompt('To address:');
+            if (!from || !to) return;
+            
+            try {
+                const res = await fetch(`http://localhost:8002/messages/send?from_address=${from}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to_address: to,
+                        subject: 'Test Message',
+                        body: 'This is a test message from NaniLabs Dashboard.'
+                    })
+                });
+                const data = await res.json();
+                if (data.status === 'sent') {
+                    logActivity(`Message sent from ${from} to ${to}`, 'success');
+                } else {
+                    throw new Error(data.detail || 'Unknown error');
+                }
+                refreshAll();
+            } catch (e) {
+                logActivity(`Failed to send message: ${e.message}`, 'error');
+            }
+        }
+
+        async function makeDeposit() {
+            const walletId = prompt('Wallet ID:');
+            const amount = prompt('Amount ($):');
+            if (!walletId || !amount) return;
+            
+            try {
+                const res = await fetch(`http://localhost:8001/wallets/${walletId}/deposit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: parseFloat(amount), source: 'dashboard' })
+                });
+                const data = await res.json();
+                logActivity(`Deposited $${amount} to ${walletId}. New balance: $${data.new_balance}`, 'success');
+                refreshAll();
+            } catch (e) {
+                logActivity(`Failed to deposit: ${e.message}`, 'error');
+            }
+        }
+
+        // Initial refresh
+        refreshAll();
+        setInterval(refreshAll, 30000); // Auto-refresh every 30s
+    </script>
+</body>
+</html>

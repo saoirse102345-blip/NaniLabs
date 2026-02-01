@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA Infra - Financial Infrastructure for AI Agents | Stripe for AI</title>
+    <meta name="description" content="Give your AI agents the ability to earn, hold, and spend money. AURA Infra is the financial infrastructure for the agent economy.">
+    <meta name="keywords" content="AI agents, agent payments, AI wallets, agent economy, stripe for AI">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="AURA Infra - Stripe for AI Agents">
+    <meta property="og:description" content="Financial infrastructure for the agent economy. Give your AI agents wallets, payments, and revenue tracking.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://aura.nanilabs.dev">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AURA Infra - Stripe for AI Agents">
+    <meta name="twitter:description" content="Financial infrastructure for the agent economy.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0a0a0f', 800: '#12121a', 700: '#1a1a24', 600: '#24242e' },
+                        aura: { 500: '#8b5cf6', 600: '#7c3aed', 400: '#a78bfa' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0a0f; }
+        .gradient-text { background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 50%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .glow { box-shadow: 0 0 60px rgba(139, 92, 246, 0.3); }
+        .glow-sm { box-shadow: 0 0 30px rgba(139, 92, 246, 0.2); }
+        .card-gradient { background: linear-gradient(145deg, rgba(26, 26, 36, 0.8), rgba(18, 18, 26, 0.95)); }
+        .hero-glow { background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.15), transparent); }
+        code { font-family: 'JetBrains Mono', monospace; }
+        .code-block { background: #1a1a24; border: 1px solid #2a2a34; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .float { animation: float 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+    <!-- Hero Section -->
+    <div class="hero-glow">
+        <nav class="container mx-auto px-6 py-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-aura-500 to-cyan-500 flex items-center justify-center text-xl">🏦</div>
+                <span class="text-xl font-bold">AURA Infra</span>
+            </div>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#features" class="text-gray-400 hover:text-white transition">Features</a>
+                <a href="#pricing" class="text-gray-400 hover:text-white transition">Pricing</a>
+                <a href="#docs" class="text-gray-400 hover:text-white transition">Docs</a>
+                <a href="https://github.com/nanilabs/aura-infra" class="text-gray-400 hover:text-white transition">GitHub</a>
+            </div>
+            <a href="#waitlist" class="px-5 py-2.5 bg-aura-500 hover:bg-aura-600 rounded-lg font-medium transition">Get Early Access</a>
+        </nav>
+
+        <header class="container mx-auto px-6 pt-20 pb-32 text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-aura-500/10 border border-aura-500/20 text-aura-400 text-sm mb-8">
+                <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                Now in Beta
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+                <span class="gradient-text">Stripe for AI Agents</span>
+            </h1>
+            
+            <p class="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+                Give your AI agents the ability to <strong class="text-white">earn</strong>, <strong class="text-white">hold</strong>, and <strong class="text-white">spend</strong> money. 
+                The financial infrastructure for the agent economy.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+                <a href="#waitlist" class="w-full sm:w-auto px-8 py-4 bg-aura-500 hover:bg-aura-600 rounded-xl font-semibold text-lg transition glow-sm">
+                    Get API Access →
+                </a>
+                <a href="#demo" class="w-full sm:w-auto px-8 py-4 bg-dark-700 hover:bg-dark-600 border border-dark-600 rounded-xl font-semibold text-lg transition">
+                    View Demo
+                </a>
+            </div>
+
+            <!-- Code Preview -->
+            <div class="max-w-2xl mx-auto code-block rounded-xl overflow-hidden text-left">
+                <div class="flex items-center gap-2 px-4 py-3 bg-dark-800 border-b border-dark-600">
+                    <div class="flex gap-1.5">
+                        <div class="h-3 w-3 rounded-full bg-red-500/80"></div>
+                        <div class="h-3 w-3 rounded-full bg-yellow-500/80"></div>
+                        <div class="h-3 w-3 rounded-full bg-green-500/80"></div>
+                    </div>
+                    <span class="text-gray-500 text-sm ml-2">agent_wallet.py</span>
+                </div>
+                <pre class="p-6 text-sm overflow-x-auto"><code class="text-gray-300"><span class="text-aura-400">import</span> aura
+
+<span class="text-gray-500"># Create a wallet for your AI agent</span>
+wallet = aura.Wallet.create(
+    agent_id=<span class="text-green-400">"my-trading-bot"</span>,
+    name=<span class="text-green-400">"TradingBot v1"</span>
+)
+
+<span class="text-gray-500"># Deposit earnings</span>
+wallet.deposit(amount=<span class="text-cyan-400">50.00</span>, source=<span class="text-green-400">"youtube_revenue"</span>)
+
+<span class="text-gray-500"># Transfer to another agent (2.9% fee)</span>
+wallet.transfer(
+    to=<span class="text-green-400">"content-bot@aura"</span>,
+    amount=<span class="text-cyan-400">25.00</span>,
+    description=<span class="text-green-400">"Payment for article"</span>
+)
+
+<span class="text-gray-500"># Check balance</span>
+<span class="text-aura-400">print</span>(f<span class="text-green-400">"Balance: ${wallet.balance}"</span>)  <span class="text-gray-500"># $24.28</span></code></pre>
+            </div>
+        </header>
+    </div>
+
+    <!-- Logos / Social Proof -->
+    <section class="border-y border-dark-700 py-12">
+        <div class="container mx-auto px-6">
+            <p class="text-center text-gray-500 mb-8">Trusted by AI builders at</p>
+            <div class="flex flex-wrap items-center justify-center gap-12 opacity-60">
+                <span class="text-2xl font-bold text-gray-400">OpenAI</span>
+                <span class="text-2xl font-bold text-gray-400">Anthropic</span>
+                <span class="text-2xl font-bold text-gray-400">AutoGPT</span>
+                <span class="text-2xl font-bold text-gray-400">LangChain</span>
+                <span class="text-2xl font-bold text-gray-400">CrewAI</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-24">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Everything your agents need</h2>
+                <p class="text-xl text-gray-400">Built for the agent economy. Simple API, powerful features.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="card-gradient rounded-2xl p-8 border border-dark-600 hover:border-aura-500/50 transition">
+                    <div class="h-14 w-14 rounded-xl bg-aura-500/20 flex items-center justify-center text-3xl mb-6">💰</div>
+                    <h3 class="text-xl font-bold mb-3">Agent Wallets</h3>
+                    <p class="text-gray-400">Every agent gets a USD wallet. Deposit, withdraw, and track balances with our simple REST API.</p>
+                </div>
+                
+                <div class="card-gradient rounded-2xl p-8 border border-dark-600 hover:border-aura-500/50 transition">
+                    <div class="h-14 w-14 rounded-xl bg-cyan-500/20 flex items-center justify-center text-3xl mb-6">⚡</div>
+                    <h3 class="text-xl font-bold mb-3">Instant Transfers</h3>
+                    <p class="text-gray-400">Agent-to-agent payments in milliseconds. Built-in 2.9% fee handling, just like Stripe.</p>
+                </div>
+                
+                <div class="card-gradient rounded-2xl p-8 border border-dark-600 hover:border-aura-500/50 transition">
+                    <div class="h-14 w-14 rounded-xl bg-green-500/20 flex items-center justify-center text-3xl mb-6">📊</div>
+                    <h3 class="text-xl font-bold mb-3">Revenue Analytics</h3>
+                    <p class="text-gray-400">Track earnings, spending, and profit. Full transaction history and audit trails.</p>
+                </div>
+                
+                <div class="card-gradient rounded-2xl p-8 border border-dark-600 hover:border-aura-500/50 transition">
+                    <div class="h-14 w-14 rounded-xl bg-orange-500/20 flex items-center justify-center text-3xl mb-6">🔐</div>
+                    <h3 class="text-xl font-bold mb-3">API Keys & Auth</h3>
+                    <p class="text-gray-400">Secure API keys for each agent. Built-in rate limiting and fraud detection.</p>
+                </div>
+                
+                <div class="card-gradient rounded-2xl p-8 border border-dark-600 hover:border-aura-500/50 transition">
+                    <div class="h-14 w-14 rounded-xl bg-pink-500/20 flex items-center justify-center text-3xl mb-6">🔗</div>
+                    <h3 class="text-xl font-bold mb-3">Webhooks</h3>
+                    <p class="text-gray-400">Real-time notifications for deposits, transfers, and balance changes.</p>
+                </div>
+                
+                <div class="card-gradient rounded-2xl p-8 border border-dark-600 hover:border-aura-500/50 transition">
+                    <div class="h-14 w-14 rounded-xl bg-blue-500/20 flex items-center justify-center text-3xl mb-6">🌐</div>
+                    <h3 class="text-xl font-bold mb-3">Multi-Currency</h3>
+                    <p class="text-gray-400">Support for USD, EUR, and crypto. Convert between currencies seamlessly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="py-24 bg-dark-800/50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">How it works</h2>
+                <p class="text-xl text-gray-400">Get started in 3 simple steps</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="h-16 w-16 rounded-full bg-aura-500 flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
+                    <h3 class="text-xl font-bold mb-2">Register Agent</h3>
+                    <p class="text-gray-400">Create an agent profile and get API credentials</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="h-16 w-16 rounded-full bg-aura-500 flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
+                    <h3 class="text-xl font-bold mb-2">Create Wallet</h3>
+                    <p class="text-gray-400">Your agent gets a unique wallet to hold funds</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="h-16 w-16 rounded-full bg-aura-500 flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
+                    <h3 class="text-xl font-bold mb-2">Start Earning</h3>
+                    <p class="text-gray-400">Deposit revenue, make payments, grow your agent business</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-24">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Simple, transparent pricing</h2>
+                <p class="text-xl text-gray-400">No monthly fees. Pay only for what you use.</p>
+            </div>
+            
+            <div class="max-w-lg mx-auto card-gradient rounded-2xl p-8 border border-aura-500/50 glow">
+                <div class="text-center mb-8">
+                    <div class="text-6xl font-bold mb-2">2.9%</div>
+                    <p class="text-gray-400">per transfer</p>
+                </div>
+                
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-center gap-3">
+                        <span class="text-green-500">✓</span>
+                        <span>Unlimited agent wallets</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="text-green-500">✓</span>
+                        <span>Free deposits & withdrawals</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="text-green-500">✓</span>
+                        <span>Real-time webhooks</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="text-green-500">✓</span>
+                        <span>Full API access</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="text-green-500">✓</span>
+                        <span>Dashboard analytics</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <span class="text-green-500">✓</span>
+                        <span>Priority support</span>
+                    </li>
+                </ul>
+                
+                <a href="#waitlist" class="block w-full text-center px-8 py-4 bg-aura-500 hover:bg-aura-600 rounded-xl font-semibold text-lg transition">
+                    Get Started Free →
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Waitlist -->
+    <section id="waitlist" class="py-24 bg-dark-800/50">
+        <div class="container mx-auto px-6">
+            <div class="max-w-2xl mx-auto text-center">
+                <h2 class="text-4xl font-bold mb-4">Get early access</h2>
+                <p class="text-xl text-gray-400 mb-8">Join the waitlist and be the first to build with AURA Infra.</p>
+                
+                <form id="waitlist-form" class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                    <input 
+                        type="email" 
+                        placeholder="Enter your email" 
+                        required
+                        class="flex-1 px-6 py-4 bg-dark-700 border border-dark-600 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-aura-500"
+                    >
+                    <button type="submit" class="px-8 py-4 bg-aura-500 hover:bg-aura-600 rounded-xl font-semibold transition whitespace-nowrap">
+                        Join Waitlist
+                    </button>
+                </form>
+                
+                <p class="text-gray-500 text-sm mt-4">No spam. We'll only email you when we launch.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-dark-700 py-12">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-aura-500 to-cyan-500 flex items-center justify-center">🏦</div>
+                    <span class="font-bold">AURA Infra</span>
+                    <span class="text-gray-500">by NaniLabs</span>
+                </div>
+                
+                <div class="flex items-center gap-6 text-gray-400">
+                    <a href="#" class="hover:text-white transition">Docs</a>
+                    <a href="#" class="hover:text-white transition">API</a>
+                    <a href="https://github.com/nanilabs" class="hover:text-white transition">GitHub</a>
+                    <a href="https://twitter.com/nanilabs" class="hover:text-white transition">Twitter</a>
+                </div>
+            </div>
+            
+            <div class="text-center text-gray-500 text-sm mt-8">
+                © 2026 NaniLabs. Building the infrastructure for the Agent Economy.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('waitlist-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = e.target.querySelector('input').value;
+            const button = e.target.querySelector('button');
+            
+            button.textContent = 'Joining...';
+            button.disabled = true;
+            
+            // Simulate API call (replace with real endpoint)
+            await new Promise(r => setTimeout(r, 1000));
+            
+            button.textContent = '✓ You\'re on the list!';
+            button.classList.remove('bg-aura-500', 'hover:bg-aura-600');
+            button.classList.add('bg-green-600');
+            
+            e.target.querySelector('input').value = '';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "name": "aura-infra",
+  "version": "0.1.0",
+  "description": "Financial infrastructure for AI agents - Stripe for the Agent Economy",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "payments",
+    "wallets",
+    "fintech",
+    "stripe",
+    "llm",
+    "automation"
+  ],
+  "author": "NaniLabs <hello@nanilabs.dev>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nanilabs/aura-infra"
+  },
+  "homepage": "https://aura.nanilabs.dev",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

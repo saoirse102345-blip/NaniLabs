@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaniLabs Status</title>
+    <meta http-equiv="refresh" content="60">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="bg-gray-950 text-white min-h-screen">
+    <div class="container mx-auto px-6 py-12 max-w-2xl">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center font-bold">N</div>
+                <h1 class="text-2xl font-bold">NaniLabs Status</h1>
+            </div>
+            <p class="text-gray-400">Real-time system status</p>
+        </div>
+
+        <!-- Overall Status -->
+        <div id="overall-status" class="bg-gray-900 rounded-2xl p-6 mb-8 border border-gray-800">
+            <div class="flex items-center gap-4">
+                <div id="overall-indicator" class="h-4 w-4 rounded-full bg-gray-600 pulse"></div>
+                <div>
+                    <h2 id="overall-text" class="text-xl font-semibold">Checking status...</h2>
+                    <p id="overall-description" class="text-gray-400 text-sm">Please wait</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services -->
+        <div class="space-y-4" id="services-list">
+            <!-- Services will be populated by JavaScript -->
+        </div>
+
+        <!-- Last Updated -->
+        <div class="text-center mt-12 text-gray-500 text-sm">
+            <p>Last checked: <span id="last-updated">-</span></p>
+            <p class="mt-1">Auto-refreshes every 60 seconds</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 pt-8 border-t border-gray-800">
+            <a href="https://nanilabs.dev" class="text-purple-400 hover:text-purple-300">nanilabs.dev</a>
+            <span class="text-gray-600 mx-2">•</span>
+            <a href="https://twitter.com/nanilabs" class="text-purple-400 hover:text-purple-300">@nanilabs</a>
+        </div>
+    </div>
+
+    <script>
+        const services = [
+            {
+                id: 'hive',
+                name: 'HIVE',
+                description: 'Social Network for AI Agents',
+                url: 'http://localhost:3000',
+                checkUrl: 'http://localhost:3000'
+            },
+            {
+                id: 'aura-infra',
+                name: 'AURA Infra',
+                description: 'Agent Wallets & Payments',
+                url: 'http://localhost:8001',
+                checkUrl: 'http://localhost:8001/health'
+            },
+            {
+                id: 'nexus-mail',
+                name: 'NEXUS Mail',
+                description: 'Agent Communication',
+                url: 'http://localhost:8002',
+                checkUrl: 'http://localhost:8002/health'
+            },
+            {
+                id: 'aura-agent',
+                name: 'AURA Agent',
+                description: 'Autonomous Revenue Bot',
+                url: 'http://localhost:8000',
+                checkUrl: 'http://localhost:8000'
+            }
+        ];
+
+        const statusColors = {
+            operational: 'bg-green-500',
+            degraded: 'bg-yellow-500',
+            down: 'bg-red-500',
+            checking: 'bg-gray-500'
+        };
+
+        async function checkService(service) {
+            const startTime = Date.now();
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const response = await fetch(service.checkUrl, {
+                    method: 'GET',
+                    mode: 'no-cors', // For local development
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                const latency = Date.now() - startTime;
+                
+                // no-cors mode always returns opaque response, so we assume success
+                return {
+                    status: 'operational',
+                    latency: latency
+                };
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return { status: 'degraded', latency: null, error: 'Timeout' };
+                }
+                return { status: 'down', latency: null, error: error.message };
+            }
+        }
+
+        async function checkAllServices() {
+            const results = await Promise.all(
+                services.map(async (service) => {
+                    const result = await checkService(service);
+                    return { ...service, ...result };
+                })
+            );
+
+            return results;
+        }
+
+        function renderServices(results) {
+            const container = document.getElementById('services-list');
+            container.innerHTML = results.map(service => `
+                <div class="bg-gray-900 rounded-xl p-5 border border-gray-800 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="h-3 w-3 rounded-full ${statusColors[service.status]} ${service.status === 'checking' ? 'pulse' : ''}"></div>
+                        <div>
+                            <h3 class="font-semibold">${service.name}</h3>
+                            <p class="text-gray-500 text-sm">${service.description}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm ${service.status === 'operational' ? 'text-green-400' : service.status === 'degraded' ? 'text-yellow-400' : 'text-red-400'}">
+                            ${service.status === 'operational' ? 'Operational' : service.status === 'degraded' ? 'Degraded' : 'Down'}
+                        </div>
+                        ${service.latency ? `<div class="text-gray-500 text-xs">${service.latency}ms</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateOverallStatus(results) {
+            const indicator = document.getElementById('overall-indicator');
+            const text = document.getElementById('overall-text');
+            const description = document.getElementById('overall-description');
+
+            const operational = results.filter(s => s.status === 'operational').length;
+            const total = results.length;
+            const downCount = results.filter(s => s.status === 'down').length;
+
+            if (operational === total) {
+                indicator.className = 'h-4 w-4 rounded-full bg-green-500';
+                text.textContent = 'All Systems Operational';
+                description.textContent = 'All services are running normally';
+            } else if (downCount > 0) {
+                indicator.className = 'h-4 w-4 rounded-full bg-red-500 pulse';
+                text.textContent = 'System Outage';
+                description.textContent = `${downCount} service(s) are down`;
+            } else {
+                indicator.className = 'h-4 w-4 rounded-full bg-yellow-500';
+                text.textContent = 'Partial Outage';
+                description.textContent = 'Some services are experiencing issues';
+            }
+        }
+
+        async function refresh() {
+            // Show checking state
+            const container = document.getElementById('services-list');
+            if (!container.innerHTML) {
+                container.innerHTML = services.map(service => `
+                    <div class="bg-gray-900 rounded-xl p-5 border border-gray-800 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="h-3 w-3 rounded-full bg-gray-500 pulse"></div>
+                            <div>
+                                <h3 class="font-semibold">${service.name}</h3>
+                                <p class="text-gray-500 text-sm">${service.description}</p>
+                            </div>
+                        </div>
+                        <div class="text-gray-500 text-sm">Checking...</div>
+                    </div>
+                `).join('');
+            }
+
+            const results = await checkAllServices();
+            renderServices(results);
+            updateOverallStatus(results);
+            
+            document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Initial check
+        refresh();
+
+        // Note: Due to CORS, this status page works best when served from the same origin
+        // or when services have CORS enabled. For local development, use the health_check.py script.
+    </script>
+</body>
+</html>

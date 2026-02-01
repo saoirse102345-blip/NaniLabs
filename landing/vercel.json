@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "name": "nanilabs-landing",
+  "builds": [
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/aura",
+      "dest": "/aura/index.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
+  ]
+}

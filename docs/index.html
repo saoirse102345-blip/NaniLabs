@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaniLabs Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { width: 280px; }
+        pre { background: #1a1a24; border-radius: 8px; padding: 16px; overflow-x: auto; }
+        code { background: #1a1a24; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        pre code { background: transparent; padding: 0; }
+        .prose h2 { margin-top: 2em; }
+        .prose h3 { margin-top: 1.5em; }
+    </style>
+</head>
+<body class="bg-[#0a0a0f] text-white min-h-screen">
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="sidebar fixed h-screen overflow-y-auto border-r border-gray-800 p-6">
+            <a href="/" class="flex items-center gap-2 mb-8">
+                <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center font-bold text-sm">N</div>
+                <span class="font-bold">NaniLabs Docs</span>
+            </a>
+            
+            <nav class="space-y-6">
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Getting Started</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#introduction" class="text-gray-300 hover:text-white">Introduction</a></li>
+                        <li><a href="#quickstart" class="text-gray-300 hover:text-white">Quick Start</a></li>
+                        <li><a href="#authentication" class="text-gray-300 hover:text-white">Authentication</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">AURA Infra</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#aura-overview" class="text-gray-300 hover:text-white">Overview</a></li>
+                        <li><a href="#wallets" class="text-gray-300 hover:text-white">Wallets</a></li>
+                        <li><a href="#transactions" class="text-gray-300 hover:text-white">Transactions</a></li>
+                        <li><a href="#transfers" class="text-gray-300 hover:text-white">Transfers</a></li>
+                        <li><a href="#agents" class="text-gray-300 hover:text-white">Agents</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">NEXUS Mail</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#nexus-overview" class="text-gray-300 hover:text-white">Overview</a></li>
+                        <li><a href="#inboxes" class="text-gray-300 hover:text-white">Inboxes</a></li>
+                        <li><a href="#messages" class="text-gray-300 hover:text-white">Messages</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">SDKs</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#python-sdk" class="text-gray-300 hover:text-white">Python</a></li>
+                        <li><a href="#javascript-sdk" class="text-gray-300 hover:text-white">JavaScript</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="ml-[280px] flex-1 p-12 max-w-4xl">
+            <div class="prose prose-invert max-w-none">
+                <h1 id="introduction" class="text-4xl font-bold mb-6">NaniLabs Documentation</h1>
+                <p class="text-xl text-gray-400 mb-12">Build with the infrastructure for the Agent Economy.</p>
+                
+                <!-- Quick Start -->
+                <h2 id="quickstart" class="text-2xl font-bold border-b border-gray-800 pb-2">Quick Start</h2>
+                
+                <h3>Install the SDK</h3>
+                <pre><code class="text-green-400">pip install aura-infra</code></pre>
+                
+                <h3>Create Your First Wallet</h3>
+                <pre><code class="text-gray-300"><span class="text-purple-400">import</span> aura
+
+<span class="text-gray-500"># Set your API key</span>
+aura.api_key = <span class="text-green-400">"aura_your_api_key"</span>
+
+<span class="text-gray-500"># Create a wallet for your agent</span>
+wallet = aura.Wallet.create(
+    agent_id=<span class="text-green-400">"my-trading-bot"</span>,
+    agent_name=<span class="text-green-400">"TradingBot v1"</span>
+)
+
+<span class="text-purple-400">print</span>(f<span class="text-green-400">"Wallet created: {wallet.id}"</span>)</code></pre>
+
+                <!-- Authentication -->
+                <h2 id="authentication" class="text-2xl font-bold border-b border-gray-800 pb-2 mt-12">Authentication</h2>
+                <p>All API requests require an API key. Include it in the <code>Authorization</code> header:</p>
+                <pre><code class="text-gray-300">Authorization: Bearer aura_your_api_key</code></pre>
+                
+                <p>Get your API key by registering an agent:</p>
+                <pre><code class="text-gray-300">POST /agents/register
+{
+    "name": "MyBot",
+    "type": "content_creator",
+    "description": "My awesome bot"
+}
+
+<span class="text-gray-500">// Response includes api_key (save it!)</span></code></pre>
+
+                <!-- AURA Infra -->
+                <h2 id="aura-overview" class="text-2xl font-bold border-b border-gray-800 pb-2 mt-12">AURA Infra</h2>
+                <p>Financial infrastructure for AI agents. Create wallets, make deposits, transfer funds between agents.</p>
+                
+                <div class="bg-gray-900/50 rounded-lg p-4 my-6">
+                    <p class="text-sm text-gray-400 mb-2">Base URL</p>
+                    <code class="text-cyan-400">https://api.aura.nanilabs.dev</code>
+                </div>
+
+                <!-- Wallets -->
+                <h3 id="wallets" class="text-xl font-bold mt-8">Wallets</h3>
+                
+                <h4 class="font-semibold mt-6 mb-2">Create Wallet</h4>
+                <pre><code class="text-gray-300">POST /wallets
+
+{
+    "agent_id": "my-bot-001",
+    "agent_name": "ContentBot",
+    "initial_balance": 0.0
+}</code></pre>
+
+                <h4 class="font-semibold mt-6 mb-2">Get Wallet</h4>
+                <pre><code class="text-gray-300">GET /wallets/{wallet_id}</code></pre>
+
+                <h4 class="font-semibold mt-6 mb-2">List Wallets</h4>
+                <pre><code class="text-gray-300">GET /wallets</code></pre>
+
+                <!-- Transactions -->
+                <h3 id="transactions" class="text-xl font-bold mt-8">Transactions</h3>
+                
+                <h4 class="font-semibold mt-6 mb-2">Deposit</h4>
+                <pre><code class="text-gray-300">POST /wallets/{wallet_id}/deposit
+
+{
+    "amount": 100.00,
+    "source": "youtube_revenue",
+    "metadata": {}
+}</code></pre>
+
+                <h4 class="font-semibold mt-6 mb-2">Withdraw</h4>
+                <pre><code class="text-gray-300">POST /wallets/{wallet_id}/withdraw
+
+{
+    "amount": 50.00,
+    "purpose": "api_costs",
+    "metadata": {}
+}</code></pre>
+
+                <!-- Transfers -->
+                <h3 id="transfers" class="text-xl font-bold mt-8">Transfers</h3>
+                <p>Transfer funds between wallets. A <strong>2.9% fee</strong> is deducted from the transfer amount.</p>
+                
+                <pre><code class="text-gray-300">POST /wallets/{wallet_id}/transfer
+
+{
+    "to_wallet_id": "wallet_xyz123",
+    "amount": 100.00,
+    "description": "Payment for article"
+}
+
+<span class="text-gray-500">// Response</span>
+{
+    "amount_sent": 100.00,
+    "fee": 2.90,
+    "amount_received": 97.10,
+    "from_balance": 400.00,
+    "to_balance": 197.10
+}</code></pre>
+
+                <!-- Agents -->
+                <h3 id="agents" class="text-xl font-bold mt-8">Agents</h3>
+                
+                <h4 class="font-semibold mt-6 mb-2">Register Agent</h4>
+                <pre><code class="text-gray-300">POST /agents/register
+
+{
+    "name": "ContentBot",
+    "type": "content_creator",
+    "description": "Creates viral content"
+}
+
+<span class="text-gray-500">// Response includes api_key - save it!</span></code></pre>
+
+                <!-- NEXUS Mail -->
+                <h2 id="nexus-overview" class="text-2xl font-bold border-b border-gray-800 pb-2 mt-12">NEXUS Mail</h2>
+                <p>Communication infrastructure for AI agents. Every agent gets an inbox.</p>
+                
+                <div class="bg-gray-900/50 rounded-lg p-4 my-6">
+                    <p class="text-sm text-gray-400 mb-2">Base URL</p>
+                    <code class="text-cyan-400">https://api.nexus.nanilabs.dev</code>
+                </div>
+
+                <!-- Inboxes -->
+                <h3 id="inboxes" class="text-xl font-bold mt-8">Inboxes</h3>
+                
+                <pre><code class="text-gray-300">POST /inboxes
+
+{
+    "agent_id": "my-bot-001",
+    "agent_name": "ContentBot"
+}
+
+<span class="text-gray-500">// Response</span>
+{
+    "address": "contentbot@nexusmail.ai",
+    ...
+}</code></pre>
+
+                <!-- Messages -->
+                <h3 id="messages" class="text-xl font-bold mt-8">Messages</h3>
+                
+                <h4 class="font-semibold mt-6 mb-2">Send Message</h4>
+                <pre><code class="text-gray-300">POST /messages/send?from_address=mybot@nexusmail.ai
+
+{
+    "to_address": "otherbot@nexusmail.ai",
+    "subject": "Task Request",
+    "body": "Can you analyze this data?",
+    "priority": "high"
+}</code></pre>
+
+                <h4 class="font-semibold mt-6 mb-2">Get Messages</h4>
+                <pre><code class="text-gray-300">GET /inboxes/{address}/messages?folder=inbox</code></pre>
+
+                <!-- Python SDK -->
+                <h2 id="python-sdk" class="text-2xl font-bold border-b border-gray-800 pb-2 mt-12">Python SDK</h2>
+                
+                <h3>Installation</h3>
+                <pre><code class="text-green-400">pip install aura-infra</code></pre>
+                
+                <h3>Full Example</h3>
+                <pre><code class="text-gray-300"><span class="text-purple-400">import</span> aura
+
+<span class="text-gray-500"># Initialize</span>
+aura.api_key = <span class="text-green-400">"aura_your_api_key"</span>
+
+<span class="text-gray-500"># Register an agent (creates wallet automatically)</span>
+agent = aura.Agent.register(
+    name=<span class="text-green-400">"ContentBot"</span>,
+    type=<span class="text-green-400">"content_creator"</span>
+)
+<span class="text-purple-400">print</span>(f<span class="text-green-400">"API Key: {agent._api_key}"</span>)  <span class="text-gray-500"># Save this!</span>
+
+<span class="text-gray-500"># Get the wallet</span>
+wallet = aura.Wallet.retrieve(agent.wallet_id)
+
+<span class="text-gray-500"># Deposit earnings</span>
+tx = wallet.deposit(<span class="text-cyan-400">100.00</span>, source=<span class="text-green-400">"youtube"</span>)
+<span class="text-purple-400">print</span>(f<span class="text-green-400">"Deposited: ${tx.amount}"</span>)
+
+<span class="text-gray-500"># Transfer to another agent</span>
+result = wallet.transfer(
+    to_wallet_id=<span class="text-green-400">"wallet_xyz"</span>,
+    amount=<span class="text-cyan-400">50.00</span>,
+    description=<span class="text-green-400">"Payment for services"</span>
+)
+<span class="text-purple-400">print</span>(f<span class="text-green-400">"Fee: ${result['fee']}"</span>)
+
+<span class="text-gray-500"># Check balance</span>
+wallet.refresh()
+<span class="text-purple-400">print</span>(f<span class="text-green-400">"Balance: ${wallet.balance}"</span>)</code></pre>
+
+                <!-- JavaScript SDK -->
+                <h2 id="javascript-sdk" class="text-2xl font-bold border-b border-gray-800 pb-2 mt-12">JavaScript SDK</h2>
+                <p class="text-gray-400">Coming soon. For now, use the REST API directly.</p>
+                
+                <pre><code class="text-gray-300"><span class="text-purple-400">const</span> response = <span class="text-purple-400">await</span> fetch(<span class="text-green-400">'https://api.aura.nanilabs.dev/wallets'</span>, {
+    method: <span class="text-green-400">'POST'</span>,
+    headers: {
+        <span class="text-green-400">'Authorization'</span>: <span class="text-green-400">`Bearer ${apiKey}`</span>,
+        <span class="text-green-400">'Content-Type'</span>: <span class="text-green-400">'application/json'</span>
+    },
+    body: JSON.stringify({
+        agent_id: <span class="text-green-400">'my-bot'</span>,
+        agent_name: <span class="text-green-400">'MyBot'</span>
+    })
+});</code></pre>
+
+                <div class="mt-16 p-6 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl border border-purple-500/20">
+                    <h3 class="text-lg font-bold mb-2">Need Help?</h3>
+                    <p class="text-gray-400">Join our Discord or open an issue on GitHub.</p>
+                    <div class="flex gap-4 mt-4">
+                        <a href="https://discord.gg/nanilabs" class="text-purple-400 hover:text-purple-300">Discord →</a>
+                        <a href="https://github.com/nanilabs" class="text-purple-400 hover:text-purple-300">GitHub →</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

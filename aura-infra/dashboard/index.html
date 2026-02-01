@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA Infra - Agent Wallet Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            900: '#0a0a0f',
+                            800: '#12121a',
+                            700: '#1a1a24',
+                            600: '#24242e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0f 0%, #12121a 100%);
+        }
+        .glow {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+        .card {
+            background: linear-gradient(145deg, rgba(26, 26, 36, 0.8), rgba(18, 18, 26, 0.9));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-white">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex items-center gap-4 mb-2">
+                <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-2xl">
+                    🏦
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                        AURA Infra
+                    </h1>
+                    <p class="text-gray-500 text-sm">Stripe for AI Agents</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Platform Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="card rounded-xl p-4">
+                <div class="text-gray-400 text-sm mb-1">Total Agents</div>
+                <div class="text-2xl font-bold text-purple-400" id="stat-agents">-</div>
+            </div>
+            <div class="card rounded-xl p-4">
+                <div class="text-gray-400 text-sm mb-1">Total Wallets</div>
+                <div class="text-2xl font-bold text-blue-400" id="stat-wallets">-</div>
+            </div>
+            <div class="card rounded-xl p-4">
+                <div class="text-gray-400 text-sm mb-1">Transaction Volume</div>
+                <div class="text-2xl font-bold text-green-400" id="stat-volume">$0</div>
+            </div>
+            <div class="card rounded-xl p-4">
+                <div class="text-gray-400 text-sm mb-1">Platform Revenue</div>
+                <div class="text-2xl font-bold text-yellow-400" id="stat-revenue">$0</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Wallets List -->
+            <div class="card rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">Agent Wallets</h2>
+                    <button onclick="openCreateModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm transition-colors">
+                        + Create Wallet
+                    </button>
+                </div>
+                <div id="wallets-list" class="space-y-3">
+                    <div class="text-gray-500 text-center py-8">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="card rounded-xl p-6">
+                <h2 class="text-xl font-semibold mb-4">Recent Transactions</h2>
+                <div id="transactions-list" class="space-y-3">
+                    <div class="text-gray-500 text-center py-8">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div class="mt-8 card rounded-xl p-6">
+            <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button onclick="openCreateModal()" class="p-4 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors text-center">
+                    <div class="text-2xl mb-2">➕</div>
+                    <div class="text-sm">Create Wallet</div>
+                </button>
+                <button onclick="openDepositModal()" class="p-4 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors text-center">
+                    <div class="text-2xl mb-2">💰</div>
+                    <div class="text-sm">Deposit</div>
+                </button>
+                <button onclick="openTransferModal()" class="p-4 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors text-center">
+                    <div class="text-2xl mb-2">💸</div>
+                    <div class="text-sm">Transfer</div>
+                </button>
+                <button onclick="openRegisterModal()" class="p-4 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors text-center">
+                    <div class="text-2xl mb-2">🤖</div>
+                    <div class="text-sm">Register Agent</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Wallet Modal -->
+    <div id="create-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
+        <div class="card rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-semibold mb-4">Create Wallet</h3>
+            <form id="create-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Agent ID</label>
+                    <input type="text" name="agent_id" required class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Agent Name</label>
+                    <input type="text" name="agent_name" required class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Initial Balance ($)</label>
+                    <input type="number" name="initial_balance" value="0" step="0.01" class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none">
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModals()" class="flex-1 p-3 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 p-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div id="deposit-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
+        <div class="card rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-semibold mb-4">Deposit Funds</h3>
+            <form id="deposit-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Wallet</label>
+                    <select name="wallet_id" required class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none" id="deposit-wallet-select">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Amount ($)</label>
+                    <input type="number" name="amount" required step="0.01" min="0.01" class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Source</label>
+                    <input type="text" name="source" required placeholder="e.g., YouTube Revenue" class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none">
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModals()" class="flex-1 p-3 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 p-3 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">Deposit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div id="transfer-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
+        <div class="card rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-semibold mb-4">Transfer Funds</h3>
+            <form id="transfer-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">From Wallet</label>
+                    <select name="from_wallet_id" required class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none" id="transfer-from-select">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">To Wallet</label>
+                    <select name="to_wallet_id" required class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none" id="transfer-to-select">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Amount ($)</label>
+                    <input type="number" name="amount" required step="0.01" min="0.01" class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Description</label>
+                    <input type="text" name="description" required placeholder="e.g., Payment for services" class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none">
+                </div>
+                <p class="text-sm text-gray-500">Platform fee: 2.9%</p>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModals()" class="flex-1 p-3 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 p-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">Transfer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Agent Modal -->
+    <div id="register-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
+        <div class="card rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-xl font-semibold mb-4">Register Agent</h3>
+            <form id="register-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Agent Name</label>
+                    <input type="text" name="name" required class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Type</label>
+                    <select name="type" required class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none">
+                        <option value="content_creator">Content Creator</option>
+                        <option value="trader">Trader</option>
+                        <option value="researcher">Researcher</option>
+                        <option value="developer">Developer</option>
+                        <option value="assistant">Assistant</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Description</label>
+                    <textarea name="description" rows="2" class="w-full p-3 bg-dark-800 border border-dark-600 rounded-lg text-white focus:border-purple-500 focus:outline-none resize-none"></textarea>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModals()" class="flex-1 p-3 bg-dark-700 hover:bg-dark-600 rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 p-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">Register</button>
+                </div>
+            </form>
+            <div id="api-key-display" class="hidden mt-4 p-4 bg-green-900/50 border border-green-500 rounded-lg">
+                <p class="text-sm text-green-400 mb-2">✅ Agent registered! Save this API key:</p>
+                <code id="api-key-value" class="block p-2 bg-dark-800 rounded text-yellow-400 break-all"></code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001';
+        let wallets = [];
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadWallets();
+            setupForms();
+        });
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats`);
+                const data = await res.json();
+                document.getElementById('stat-agents').textContent = data.total_agents;
+                document.getElementById('stat-wallets').textContent = data.total_wallets;
+                document.getElementById('stat-volume').textContent = `$${data.total_volume.toFixed(2)}`;
+                document.getElementById('stat-revenue').textContent = `$${data.platform_revenue.toFixed(2)}`;
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+
+        async function loadWallets() {
+            try {
+                const res = await fetch(`${API_BASE}/wallets`);
+                const data = await res.json();
+                wallets = data.wallets;
+                renderWallets();
+                updateWalletSelects();
+            } catch (e) {
+                document.getElementById('wallets-list').innerHTML = '<div class="text-red-400 text-center py-4">Failed to load wallets. Is the API running?</div>';
+            }
+        }
+
+        function renderWallets() {
+            const container = document.getElementById('wallets-list');
+            if (wallets.length === 0) {
+                container.innerHTML = '<div class="text-gray-500 text-center py-4">No wallets yet. Create one!</div>';
+                return;
+            }
+            container.innerHTML = wallets.map(w => `
+                <div class="p-4 bg-dark-800 rounded-lg border border-dark-600 hover:border-purple-500/50 transition-colors">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="font-semibold">${w.agent_name}</div>
+                            <div class="text-xs text-gray-500">${w.id}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-lg font-bold text-green-400">$${w.balance.toFixed(2)}</div>
+                            <div class="text-xs text-gray-500">${w.currency}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 text-xs text-gray-400">
+                        <span>Earned: $${w.total_earned.toFixed(2)}</span>
+                        <span>Spent: $${w.total_spent.toFixed(2)}</span>
+                        <span class="${w.profit >= 0 ? 'text-green-400' : 'text-red-400'}">Profit: $${w.profit.toFixed(2)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateWalletSelects() {
+            const options = wallets.map(w => `<option value="${w.id}">${w.agent_name} ($${w.balance.toFixed(2)})</option>`).join('');
+            document.getElementById('deposit-wallet-select').innerHTML = options;
+            document.getElementById('transfer-from-select').innerHTML = options;
+            document.getElementById('transfer-to-select').innerHTML = options;
+        }
+
+        function setupForms() {
+            document.getElementById('create-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const form = new FormData(e.target);
+                try {
+                    const res = await fetch(`${API_BASE}/wallets`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            agent_id: form.get('agent_id'),
+                            agent_name: form.get('agent_name'),
+                            initial_balance: parseFloat(form.get('initial_balance')) || 0
+                        })
+                    });
+                    if (res.ok) {
+                        closeModals();
+                        loadWallets();
+                        loadStats();
+                    }
+                } catch (e) { alert('Failed to create wallet'); }
+            };
+
+            document.getElementById('deposit-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const form = new FormData(e.target);
+                try {
+                    const res = await fetch(`${API_BASE}/wallets/${form.get('wallet_id')}/deposit`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            amount: parseFloat(form.get('amount')),
+                            source: form.get('source')
+                        })
+                    });
+                    if (res.ok) {
+                        closeModals();
+                        loadWallets();
+                        loadStats();
+                    }
+                } catch (e) { alert('Failed to deposit'); }
+            };
+
+            document.getElementById('transfer-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const form = new FormData(e.target);
+                try {
+                    const res = await fetch(`${API_BASE}/wallets/${form.get('from_wallet_id')}/transfer`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            to_wallet_id: form.get('to_wallet_id'),
+                            amount: parseFloat(form.get('amount')),
+                            description: form.get('description')
+                        })
+                    });
+                    if (res.ok) {
+                        closeModals();
+                        loadWallets();
+                        loadStats();
+                    } else {
+                        const err = await res.json();
+                        alert(err.detail || 'Transfer failed');
+                    }
+                } catch (e) { alert('Failed to transfer'); }
+            };
+
+            document.getElementById('register-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const form = new FormData(e.target);
+                try {
+                    const res = await fetch(`${API_BASE}/agents/register`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            name: form.get('name'),
+                            type: form.get('type'),
+                            description: form.get('description')
+                        })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        document.getElementById('api-key-value').textContent = data.api_key;
+                        document.getElementById('api-key-display').classList.remove('hidden');
+                        loadWallets();
+                        loadStats();
+                    }
+                } catch (e) { alert('Failed to register agent'); }
+            };
+        }
+
+        function openCreateModal() {
+            document.getElementById('create-modal').classList.remove('hidden');
+            document.getElementById('create-modal').classList.add('flex');
+        }
+
+        function openDepositModal() {
+            document.getElementById('deposit-modal').classList.remove('hidden');
+            document.getElementById('deposit-modal').classList.add('flex');
+        }
+
+        function openTransferModal() {
+            document.getElementById('transfer-modal').classList.remove('hidden');
+            document.getElementById('transfer-modal').classList.add('flex');
+        }
+
+        function openRegisterModal() {
+            document.getElementById('api-key-display').classList.add('hidden');
+            document.getElementById('register-modal').classList.remove('hidden');
+            document.getElementById('register-modal').classList.add('flex');
+        }
+
+        function closeModals() {
+            document.querySelectorAll('[id$="-modal"]').forEach(m => {
+                m.classList.add('hidden');
+                m.classList.remove('flex');
+            });
+        }
+
+        // Close modals on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModals();
+        });
+
+        // Auto-refresh every 10 seconds
+        setInterval(() => {
+            loadStats();
+            loadWallets();
+        }, 10000);
+    </script>
+</body>
+</html>

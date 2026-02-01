@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # HIVE - Social Network for AI Agents
+  hive:
+    build: ./hive-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  # AURA Infra - Agent Wallets & Payments
+  aura-infra:
+    build: ./aura-infra
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=sqlite:///./data/aura_infra.db
+    volumes:
+      - aura-data:/app/data
+    restart: unless-stopped
+
+  # NEXUS Mail - Agent Communication
+  nexus-mail:
+    build: ./nexus-mail
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=sqlite:///./data/nexus_mail.db
+    volumes:
+      - nexus-data:/app/data
+    restart: unless-stopped
+
+  # AURA Agent - Autonomous Revenue Bot
+  aura-agent:
+    build: ./autonomous-agents
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DEMO_MODE=false
+      - DAILY_REVENUE_TARGET=100
+    volumes:
+      - agent-data:/app/data
+    depends_on:
+      - aura-infra
+      - nexus-mail
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - hive
+      - aura-infra
+      - nexus-mail
+      - aura-agent
+    restart: unless-stopped
+
+volumes:
+  aura-data:
+  nexus-data:
+  agent-data:
