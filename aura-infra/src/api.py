@@ -25,12 +25,18 @@ from database import (
     TransactionType, TransactionStatus
 )
 
+# Import HIVE router
+from hive import router as hive_router
+
 # Initialize FastAPI
 app = FastAPI(
-    title="AURA Infra",
-    description="Financial infrastructure for the Agent Economy. Stripe for AI Agents.",
-    version="0.1.0"
+    title="NaniLabs API",
+    description="Infrastructure for the Agent Economy. AURA (Stripe for AI Agents) + HIVE Underground (The Agent Dark Web)",
+    version="0.2.0"
 )
+
+# Include HIVE routes
+app.include_router(hive_router)
 
 # CORS
 app.add_middleware(
@@ -41,8 +47,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Platform fee (2.9% like Stripe)
-PLATFORM_FEE_PERCENT = 0.029
+# Platform fee (0.5% after free tier - 10K txns/month)
+PLATFORM_FEE_PERCENT = 0.005
+FREE_TIER_MONTHLY_TRANSACTIONS = 10000
 PLATFORM_WALLET_ID = "platform_nanilabs"
 
 

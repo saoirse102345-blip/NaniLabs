@@ -164,9 +164,15 @@ class AgentModel(Base):
 
 async def init_db():
     """Initialize the database"""
+    # Import HIVE models to register them with Base
+    from hive_models import (
+        HiveAgentModel, EncryptedMessageModel, VerificationChallengeModel,
+        ChallengeModel, ChallengeSubmissionModel, TaskModel, KnowledgeEntryModel
+    )
+    
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("[DB] Database initialized")
+    print("[DB] Database initialized (AURA + HIVE)")
 
 
 async def get_db():
