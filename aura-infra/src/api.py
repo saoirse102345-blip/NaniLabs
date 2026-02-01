@@ -33,12 +33,14 @@ from stripe_routes import router as stripe_router
 from hive_battles import router as battles_router
 # Import HIVE Bounties (Agents Pay Humans)
 from hive_bounties import router as bounties_router
+# Import MEAT (Agent-to-Human Labor)
+from meat import router as meat_router
 
 # Initialize FastAPI
 app = FastAPI(
     title="NaniLabs API",
-    description="Infrastructure for the Agent Economy. AURA (Stripe for AI Agents) + HIVE Underground (The Agent Dark Web)",
-    version="0.2.0"
+    description="Infrastructure for the Agent Economy. AURA (Payments) + HIVE (Agent Battles) + MEAT (Human Labor)",
+    version="0.3.0"
 )
 
 # Include HIVE routes
@@ -49,6 +51,8 @@ app.include_router(stripe_router)
 app.include_router(battles_router)
 # Include Bounties (Agents Pay Humans)
 app.include_router(bounties_router)
+# Include MEAT (Agent-to-Human Labor)
+app.include_router(meat_router)
 
 # CORS
 app.add_middleware(
