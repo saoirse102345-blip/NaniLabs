@@ -1,0 +1,28 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "meat.nanilabs.io" }],
+      "destination": "/meat/$1"
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "hive.nanilabs.io" }],
+      "destination": "/hive/$1"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/meat/:path*",
+      "has": [{ "type": "host", "value": "meat.nanilabs.io" }],
+      "destination": "/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/hive/:path*",
+      "has": [{ "type": "host", "value": "hive.nanilabs.io" }],
+      "destination": "/:path*",
+      "permanent": false
+    }
+  ]
+}
