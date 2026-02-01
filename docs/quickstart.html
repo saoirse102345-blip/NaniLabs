@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA Quick Start - 5 Minutes to Agent Payments</title>
+    <meta name="description" content="Get started with AURA Infra in 5 minutes. Create agent wallets, make deposits, and transfer money between AI agents.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 950: '#050507', 900: '#0a0a0f', 800: '#12121a', 700: '#1a1a24', 600: '#24242e' },
+                        nani: { 500: '#8b5cf6', 600: '#7c3aed', 400: '#a78bfa' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        .gradient-text { background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="bg-dark-950 text-white min-h-screen">
+    <nav class="container mx-auto px-6 py-6 flex items-center justify-between border-b border-dark-700">
+        <a href="/" class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-nani-500 to-cyan-500 flex items-center justify-center text-xl font-bold">N</div>
+            <span class="text-xl font-bold">NaniLabs</span>
+        </a>
+        <div class="flex items-center gap-6">
+            <a href="/playground.html" class="text-gray-400 hover:text-white transition">Playground</a>
+            <a href="/blog/" class="text-gray-400 hover:text-white transition">Blog</a>
+            <a href="https://api.nanilabs.io/docs" class="px-4 py-2 bg-nani-500 hover:bg-nani-600 rounded-lg font-medium transition">API Docs →</a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-12 max-w-4xl">
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                <span class="gradient-text">Quick Start Guide</span>
+            </h1>
+            <p class="text-xl text-gray-400">Get AURA running in 5 minutes</p>
+        </header>
+
+        <div class="space-y-12">
+            <!-- Step 1 -->
+            <section class="bg-dark-800 rounded-xl p-8 border border-dark-600">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="h-12 w-12 rounded-full bg-nani-500 flex items-center justify-center text-xl font-bold">1</div>
+                    <h2 class="text-2xl font-bold">Register Your Agent</h2>
+                </div>
+                <p class="text-gray-400 mb-6">Create an agent profile and get a wallet automatically.</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-nani-400 mb-2">cURL</h4>
+                        <pre class="bg-dark-900 rounded-lg p-4 overflow-x-auto text-sm"><code class="text-gray-300">curl -X POST https://api.nanilabs.io/agents/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "MyTradingBot", "type": "trading", "description": "Automated trading agent"}'</code></pre>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-cyan-400 mb-2">Python</h4>
+                        <pre class="bg-dark-900 rounded-lg p-4 overflow-x-auto text-sm"><code class="text-gray-300">import requests
+
+response = requests.post(
+    "https://api.nanilabs.io/agents/register",
+    json={
+        "name": "MyTradingBot",
+        "type": "trading",
+        "description": "Automated trading agent"
+    }
+)
+data = response.json()
+
+# Save these!
+wallet_id = data["wallet"]["id"]
+api_key = data["api_key"]
+print(f"Wallet: {wallet_id}")
+print(f"API Key: {api_key}")</code></pre>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <p class="text-yellow-400 text-sm">⚠️ <strong>Important:</strong> Save your API key immediately! It's only shown once.</p>
+                </div>
+            </section>
+
+            <!-- Step 2 -->
+            <section class="bg-dark-800 rounded-xl p-8 border border-dark-600">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="h-12 w-12 rounded-full bg-nani-500 flex items-center justify-center text-xl font-bold">2</div>
+                    <h2 class="text-2xl font-bold">Deposit Funds</h2>
+                </div>
+                <p class="text-gray-400 mb-6">Add money to your agent's wallet. Free, instant deposits.</p>
+                
+                <pre class="bg-dark-900 rounded-lg p-4 overflow-x-auto text-sm"><code class="text-gray-300"># Python
+response = requests.post(
+    f"https://api.nanilabs.io/wallets/{wallet_id}/deposit",
+    json={
+        "amount": 100.00,
+        "source": "initial_funding"
+    }
+)
+print(f"New balance: ${response.json()['new_balance']}")</code></pre>
+            </section>
+
+            <!-- Step 3 -->
+            <section class="bg-dark-800 rounded-xl p-8 border border-dark-600">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="h-12 w-12 rounded-full bg-nani-500 flex items-center justify-center text-xl font-bold">3</div>
+                    <h2 class="text-2xl font-bold">Transfer to Another Agent</h2>
+                </div>
+                <p class="text-gray-400 mb-6">Pay another agent for work or services. 2.9% fee (like Stripe).</p>
+                
+                <pre class="bg-dark-900 rounded-lg p-4 overflow-x-auto text-sm"><code class="text-gray-300"># Python
+response = requests.post(
+    f"https://api.nanilabs.io/wallets/{wallet_id}/transfer",
+    json={
+        "to_wallet_id": "wallet_abc123",  # The recipient's wallet
+        "amount": 25.00,
+        "description": "Payment for content creation"
+    }
+)
+
+result = response.json()
+print(f"Sent: ${result['amount_sent']}")
+print(f"Fee: ${result['fee']}")
+print(f"Received: ${result['amount_received']}")</code></pre>
+            </section>
+
+            <!-- Step 4 -->
+            <section class="bg-dark-800 rounded-xl p-8 border border-dark-600">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="h-12 w-12 rounded-full bg-nani-500 flex items-center justify-center text-xl font-bold">4</div>
+                    <h2 class="text-2xl font-bold">Check Balance & Transactions</h2>
+                </div>
+                <p class="text-gray-400 mb-6">Monitor your agent's financial status.</p>
+                
+                <pre class="bg-dark-900 rounded-lg p-4 overflow-x-auto text-sm"><code class="text-gray-300"># Check balance
+balance = requests.get(f"https://api.nanilabs.io/wallets/{wallet_id}/balance").json()
+print(f"Balance: ${balance['balance']}")
+
+# Get transaction history
+transactions = requests.get(f"https://api.nanilabs.io/wallets/{wallet_id}/transactions").json()
+for tx in transactions['transactions'][:5]:
+    print(f"{tx['type']}: ${tx['amount']} - {tx['description']}")</code></pre>
+            </section>
+
+            <!-- Full Example -->
+            <section class="bg-dark-800 rounded-xl p-8 border border-nani-500/50">
+                <h2 class="text-2xl font-bold mb-6">📦 Complete Example</h2>
+                <p class="text-gray-400 mb-6">Copy this and you're ready to go!</p>
+                
+                <pre class="bg-dark-900 rounded-lg p-4 overflow-x-auto text-sm max-h-96 overflow-y-auto"><code class="text-gray-300">import requests
+
+API_BASE = "https://api.nanilabs.io"
+
+class AURAWallet:
+    def __init__(self, name, agent_type="assistant"):
+        # Register and get wallet
+        resp = requests.post(f"{API_BASE}/agents/register", json={
+            "name": name,
+            "type": agent_type,
+            "description": f"{name} - powered by AURA"
+        })
+        data = resp.json()
+        self.wallet_id = data["wallet"]["id"]
+        self.api_key = data["api_key"]
+        self.name = name
+    
+    def deposit(self, amount, source="manual"):
+        resp = requests.post(f"{API_BASE}/wallets/{self.wallet_id}/deposit", json={
+            "amount": amount,
+            "source": source
+        })
+        return resp.json()
+    
+    def transfer(self, to_wallet_id, amount, description=""):
+        resp = requests.post(f"{API_BASE}/wallets/{self.wallet_id}/transfer", json={
+            "to_wallet_id": to_wallet_id,
+            "amount": amount,
+            "description": description
+        })
+        return resp.json()
+    
+    @property
+    def balance(self):
+        resp = requests.get(f"{API_BASE}/wallets/{self.wallet_id}/balance")
+        return resp.json()["balance"]
+
+# Example usage
+if __name__ == "__main__":
+    # Create two agents
+    alice = AURAWallet("AliceBot", "trading")
+    bob = AURAWallet("BobBot", "content")
+    
+    print(f"Alice wallet: {alice.wallet_id}")
+    print(f"Bob wallet: {bob.wallet_id}")
+    
+    # Fund Alice
+    alice.deposit(100, "initial_funding")
+    print(f"Alice balance: ${alice.balance}")
+    
+    # Alice pays Bob for work
+    result = alice.transfer(bob.wallet_id, 25, "Payment for article")
+    print(f"Transfer: ${result['amount_sent']} sent, ${result['fee']} fee")
+    
+    # Check balances
+    print(f"Alice: ${alice.balance}")
+    print(f"Bob: ${bob.balance}")</code></pre>
+            </section>
+
+            <!-- Next Steps -->
+            <section class="text-center py-8">
+                <h2 class="text-2xl font-bold mb-6">What's Next?</h2>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="/playground.html" class="px-6 py-3 bg-nani-500 hover:bg-nani-600 rounded-lg font-semibold transition">
+                        🎮 Try the Playground
+                    </a>
+                    <a href="https://api.nanilabs.io/docs" class="px-6 py-3 bg-dark-700 hover:bg-dark-600 border border-dark-600 rounded-lg font-semibold transition">
+                        📚 Full API Docs
+                    </a>
+                    <a href="/blog/" class="px-6 py-3 bg-dark-700 hover:bg-dark-600 border border-dark-600 rounded-lg font-semibold transition">
+                        📝 Read the Blog
+                    </a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="border-t border-dark-700 py-8 mt-12">
+        <div class="container mx-auto px-6 text-center text-gray-500 text-sm">
+            © 2026 NaniLabs — Building infrastructure for the Agent Economy
+        </div>
+    </footer>
+</body>
+</html>
