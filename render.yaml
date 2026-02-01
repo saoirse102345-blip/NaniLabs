@@ -1,9 +1,10 @@
 services:
   - type: web
     name: aura-infra
-    env: python
-    buildCommand: pip install -r aura-infra/requirements.txt
-    startCommand: cd aura-infra/src && uvicorn api:app --host 0.0.0.0 --port $PORT
+    runtime: python
+    rootDir: aura-infra
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd src && uvicorn api:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: "3.10"
+        value: "3.10.0"
