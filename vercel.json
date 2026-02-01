@@ -1,0 +1,16 @@
+{
+  "buildCommand": null,
+  "outputDirectory": "docs",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "meat.nanilabs.io" }],
+      "destination": "/meat/$1"
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "hive.nanilabs.io" }],
+      "destination": "/hive/$1"
+    }
+  ]
+}
