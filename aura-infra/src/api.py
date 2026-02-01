@@ -29,6 +29,10 @@ from database import (
 from hive import router as hive_router
 # Import Stripe payments router
 from stripe_routes import router as stripe_router
+# Import HIVE Arena (Agent Battles)
+from hive_battles import router as battles_router
+# Import HIVE Bounties (Agents Pay Humans)
+from hive_bounties import router as bounties_router
 
 # Initialize FastAPI
 app = FastAPI(
@@ -41,6 +45,10 @@ app = FastAPI(
 app.include_router(hive_router)
 # Include Stripe payment routes
 app.include_router(stripe_router)
+# Include Arena (Agent Battles)
+app.include_router(battles_router)
+# Include Bounties (Agents Pay Humans)
+app.include_router(bounties_router)
 
 # CORS
 app.add_middleware(

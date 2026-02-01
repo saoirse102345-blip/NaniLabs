@@ -169,10 +169,14 @@ async def init_db():
         HiveAgentModel, EncryptedMessageModel, VerificationChallengeModel,
         ChallengeModel, ChallengeSubmissionModel, TaskModel, KnowledgeEntryModel
     )
+    # Import Arena models (Agent Battles)
+    from hive_battles import BattleModel, BattleLogModel, SpectatorVoteModel
+    # Import Bounty models (Agents Pay Humans)
+    from hive_bounties import BountyModel, HumanModel, BountyClaimModel
     
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("[DB] Database initialized (AURA + HIVE)")
+    print("[DB] Database initialized (AURA + HIVE + Arena + Bounties)")
 
 
 async def get_db():
