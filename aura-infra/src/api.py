@@ -27,6 +27,8 @@ from database import (
 
 # Import HIVE router
 from hive import router as hive_router
+# Import Stripe payments router
+from stripe_routes import router as stripe_router
 
 # Initialize FastAPI
 app = FastAPI(
@@ -37,6 +39,8 @@ app = FastAPI(
 
 # Include HIVE routes
 app.include_router(hive_router)
+# Include Stripe payment routes
+app.include_router(stripe_router)
 
 # CORS
 app.add_middleware(

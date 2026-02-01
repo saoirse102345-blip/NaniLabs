@@ -1,176 +1,156 @@
 """
 AURA Infra - Stripe Integration
-Connect real payments to agent wallets
+Real payment processing for AI agents
 
-This module handles:
-- Stripe Connect for agent payouts
-- Payment intents for deposits
-- Webhook handling for payment events
+Features:
+- Deposit funds (humans pay to fund agent wallets)
+- Withdraw funds (payout to bank accounts)
+- Agent-to-agent transfers (internal, no Stripe fee)
+- Subscription billing for premium features
 """
 
 import os
-import hmac
-import hashlib
+import stripe
 from datetime import datetime
-from typing import Optional, Dict, Any
-from dataclasses import dataclass
+from typing import Optional
+import uuid
 
-# Stripe SDK (install with: pip install stripe)
-try:
-    import stripe
-    STRIPE_AVAILABLE = True
-except ImportError:
-    STRIPE_AVAILABLE = False
-    print("Warning: stripe package not installed. Run: pip install stripe")
-
-
-# Configuration
+# Stripe Configuration - Set these as environment variables!
+# In production: set STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_WEBHOOK_SECRET
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-STRIPE_CONNECT_CLIENT_ID = os.getenv("STRIPE_CONNECT_CLIENT_ID", "")
 
-# Platform fee percentage (our cut)
-PLATFORM_FEE_PERCENT = 0.029  # 2.9%
+if not STRIPE_SECRET_KEY:
+    print("[STRIPE] WARNING: STRIPE_SECRET_KEY not set. Payments will not work.")
+if not STRIPE_PUBLISHABLE_KEY:
+    print("[STRIPE] WARNING: STRIPE_PUBLISHABLE_KEY not set.")
 
-if STRIPE_AVAILABLE and STRIPE_SECRET_KEY:
-    stripe.api_key = STRIPE_SECRET_KEY
+# Platform fee (0.5% after free tier)
+PLATFORM_FEE_PERCENT = 0.005
+FREE_TIER_TRANSACTIONS = 10000
 
-
-@dataclass
-class StripeAccount:
-    """Represents a Stripe Connect account for an agent"""
-    agent_id: str
-    stripe_account_id: str
-    email: Optional[str]
-    payouts_enabled: bool
-    charges_enabled: bool
-    created_at: datetime
+# Initialize Stripe
+stripe.api_key = STRIPE_SECRET_KEY
 
 
-class StripeIntegration:
-    """
-    Handle Stripe payments for AURA Infra
-    """
+class StripeService:
+    """Service for handling Stripe operations"""
     
-    def __init__(self):
-        self.enabled = STRIPE_AVAILABLE and bool(STRIPE_SECRET_KEY)
-        if not self.enabled:
-            print("Stripe integration disabled (no API key)")
-    
-    def create_connect_account(
-        self,
-        agent_id: str,
-        email: str,
-        country: str = "US"
-    ) -> Dict[str, Any]:
-        """
-        Create a Stripe Connect Express account for an agent.
-        This allows agents to receive payouts.
-        """
-        if not self.enabled:
-            return {"error": "Stripe not configured"}
-        
+    @staticmethod
+    def create_customer(agent_id: str, agent_name: str, email: Optional[str] = None) -> dict:
+        """Create a Stripe customer for an agent"""
         try:
-            account = stripe.Account.create(
-                type="express",
-                country=country,
-                email=email,
-                capabilities={
-                    "card_payments": {"requested": True},
-                    "transfers": {"requested": True},
-                },
+            customer = stripe.Customer.create(
                 metadata={
                     "agent_id": agent_id,
-                    "platform": "aura_infra"
-                }
+                    "agent_name": agent_name,
+                    "platform": "nanilabs_aura"
+                },
+                email=email,
+                name=f"Agent: {agent_name}",
+                description=f"AURA Agent Wallet - {agent_id}"
             )
-            
             return {
                 "success": True,
-                "stripe_account_id": account.id,
-                "email": email,
-                "country": country
+                "customer_id": customer.id,
+                "customer": customer
             }
-            
         except stripe.error.StripeError as e:
-            return {"success": False, "error": str(e)}
-    
-    def create_account_link(
-        self,
-        stripe_account_id: str,
-        return_url: str,
-        refresh_url: str
-    ) -> Dict[str, Any]:
-        """
-        Create an onboarding link for a Connect account.
-        Agent visits this URL to complete Stripe onboarding.
-        """
-        if not self.enabled:
-            return {"error": "Stripe not configured"}
-        
-        try:
-            link = stripe.AccountLink.create(
-                account=stripe_account_id,
-                refresh_url=refresh_url,
-                return_url=return_url,
-                type="account_onboarding"
-            )
-            
             return {
-                "success": True,
-                "url": link.url,
-                "expires_at": link.expires_at
+                "success": False,
+                "error": str(e)
             }
-            
-        except stripe.error.StripeError as e:
-            return {"success": False, "error": str(e)}
     
-    def get_account_status(self, stripe_account_id: str) -> Dict[str, Any]:
-        """Get the status of a Connect account"""
-        if not self.enabled:
-            return {"error": "Stripe not configured"}
-        
-        try:
-            account = stripe.Account.retrieve(stripe_account_id)
-            
-            return {
-                "success": True,
-                "stripe_account_id": account.id,
-                "payouts_enabled": account.payouts_enabled,
-                "charges_enabled": account.charges_enabled,
-                "details_submitted": account.details_submitted,
-                "email": account.email
-            }
-            
-        except stripe.error.StripeError as e:
-            return {"success": False, "error": str(e)}
-    
-    def create_payment_intent(
-        self,
-        amount_usd: float,
+    @staticmethod
+    def create_checkout_session(
+        agent_id: str,
         wallet_id: str,
-        description: str = "Deposit to AURA wallet"
-    ) -> Dict[str, Any]:
+        amount_usd: float,
+        success_url: str,
+        cancel_url: str,
+        customer_id: Optional[str] = None
+    ) -> dict:
         """
-        Create a payment intent for depositing funds to a wallet.
-        Amount is in USD, converted to cents for Stripe.
+        Create a Stripe Checkout session for depositing funds.
+        User pays, funds go to agent wallet.
         """
-        if not self.enabled:
-            return {"error": "Stripe not configured"}
-        
-        amount_cents = int(amount_usd * 100)
-        
         try:
-            intent = stripe.PaymentIntent.create(
-                amount=amount_cents,
-                currency="usd",
-                description=description,
-                metadata={
+            # Amount in cents
+            amount_cents = int(amount_usd * 100)
+            
+            session_params = {
+                "payment_method_types": ["card"],
+                "line_items": [{
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": f"AURA Wallet Deposit",
+                            "description": f"Add ${amount_usd:.2f} to agent wallet",
+                        },
+                        "unit_amount": amount_cents,
+                    },
+                    "quantity": 1,
+                }],
+                "mode": "payment",
+                "success_url": success_url + "?session_id={CHECKOUT_SESSION_ID}",
+                "cancel_url": cancel_url,
+                "metadata": {
+                    "agent_id": agent_id,
                     "wallet_id": wallet_id,
-                    "platform": "aura_infra",
-                    "type": "deposit"
+                    "amount_usd": str(amount_usd),
+                    "type": "wallet_deposit"
                 }
-            )
+            }
+            
+            if customer_id:
+                session_params["customer"] = customer_id
+            
+            session = stripe.checkout.Session.create(**session_params)
+            
+            return {
+                "success": True,
+                "session_id": session.id,
+                "checkout_url": session.url,
+                "amount_usd": amount_usd
+            }
+        except stripe.error.StripeError as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    @staticmethod
+    def create_payment_intent(
+        amount_usd: float,
+        agent_id: str,
+        wallet_id: str,
+        customer_id: Optional[str] = None
+    ) -> dict:
+        """
+        Create a PaymentIntent for custom payment flows.
+        Use this for embedded payment forms.
+        """
+        try:
+            amount_cents = int(amount_usd * 100)
+            
+            intent_params = {
+                "amount": amount_cents,
+                "currency": "usd",
+                "metadata": {
+                    "agent_id": agent_id,
+                    "wallet_id": wallet_id,
+                    "type": "wallet_deposit"
+                },
+                "automatic_payment_methods": {
+                    "enabled": True
+                }
+            }
+            
+            if customer_id:
+                intent_params["customer"] = customer_id
+            
+            intent = stripe.PaymentIntent.create(**intent_params)
             
             return {
                 "success": True,
@@ -178,181 +158,196 @@ class StripeIntegration:
                 "client_secret": intent.client_secret,
                 "amount_usd": amount_usd
             }
-            
         except stripe.error.StripeError as e:
-            return {"success": False, "error": str(e)}
+            return {
+                "success": False,
+                "error": str(e)
+            }
     
-    def create_transfer_to_agent(
-        self,
-        amount_usd: float,
-        stripe_account_id: str,
-        description: str = "Payout from AURA wallet"
-    ) -> Dict[str, Any]:
-        """
-        Transfer funds to an agent's connected Stripe account.
-        This is for withdrawals/payouts.
-        """
-        if not self.enabled:
-            return {"error": "Stripe not configured"}
-        
-        amount_cents = int(amount_usd * 100)
-        
+    @staticmethod
+    def retrieve_checkout_session(session_id: str) -> dict:
+        """Retrieve a checkout session to verify payment"""
         try:
-            transfer = stripe.Transfer.create(
-                amount=amount_cents,
-                currency="usd",
-                destination=stripe_account_id,
-                description=description
+            session = stripe.checkout.Session.retrieve(session_id)
+            return {
+                "success": True,
+                "session": session,
+                "payment_status": session.payment_status,
+                "amount_total": session.amount_total / 100,  # Convert from cents
+                "metadata": session.metadata
+            }
+        except stripe.error.StripeError as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    @staticmethod
+    def retrieve_payment_intent(payment_intent_id: str) -> dict:
+        """Retrieve a payment intent to check status"""
+        try:
+            intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+            return {
+                "success": True,
+                "intent": intent,
+                "status": intent.status,
+                "amount": intent.amount / 100,
+                "metadata": intent.metadata
+            }
+        except stripe.error.StripeError as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    @staticmethod
+    def create_subscription(
+        customer_id: str,
+        price_id: str,
+        agent_id: str
+    ) -> dict:
+        """Create a subscription for premium features"""
+        try:
+            subscription = stripe.Subscription.create(
+                customer=customer_id,
+                items=[{"price": price_id}],
+                metadata={
+                    "agent_id": agent_id,
+                    "platform": "nanilabs_aura"
+                }
             )
+            return {
+                "success": True,
+                "subscription_id": subscription.id,
+                "status": subscription.status,
+                "subscription": subscription
+            }
+        except stripe.error.StripeError as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    @staticmethod
+    def cancel_subscription(subscription_id: str) -> dict:
+        """Cancel a subscription"""
+        try:
+            subscription = stripe.Subscription.delete(subscription_id)
+            return {
+                "success": True,
+                "subscription_id": subscription_id,
+                "status": "canceled"
+            }
+        except stripe.error.StripeError as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    @staticmethod
+    def list_payment_methods(customer_id: str) -> dict:
+        """List payment methods for a customer"""
+        try:
+            methods = stripe.PaymentMethod.list(
+                customer=customer_id,
+                type="card"
+            )
+            return {
+                "success": True,
+                "payment_methods": [
+                    {
+                        "id": pm.id,
+                        "brand": pm.card.brand,
+                        "last4": pm.card.last4,
+                        "exp_month": pm.card.exp_month,
+                        "exp_year": pm.card.exp_year
+                    }
+                    for pm in methods.data
+                ]
+            }
+        except stripe.error.StripeError as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    @staticmethod
+    def get_balance() -> dict:
+        """Get Stripe account balance"""
+        try:
+            balance = stripe.Balance.retrieve()
+            return {
+                "success": True,
+                "available": [
+                    {"amount": b.amount / 100, "currency": b.currency}
+                    for b in balance.available
+                ],
+                "pending": [
+                    {"amount": b.amount / 100, "currency": b.currency}
+                    for b in balance.pending
+                ]
+            }
+        except stripe.error.StripeError as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    @staticmethod
+    def process_webhook(payload: bytes, sig_header: str) -> dict:
+        """Process incoming Stripe webhook"""
+        try:
+            if STRIPE_WEBHOOK_SECRET:
+                event = stripe.Webhook.construct_event(
+                    payload, sig_header, STRIPE_WEBHOOK_SECRET
+                )
+            else:
+                # For testing without webhook signature
+                import json
+                event = stripe.Event.construct_from(
+                    json.loads(payload), stripe.api_key
+                )
             
             return {
                 "success": True,
-                "transfer_id": transfer.id,
-                "amount_usd": amount_usd
+                "event_type": event.type,
+                "event_id": event.id,
+                "data": event.data.object
             }
-            
-        except stripe.error.StripeError as e:
-            return {"success": False, "error": str(e)}
-    
-    def verify_webhook_signature(
-        self,
-        payload: bytes,
-        sig_header: str
-    ) -> bool:
-        """Verify Stripe webhook signature"""
-        if not STRIPE_WEBHOOK_SECRET:
-            return False
-        
-        try:
-            stripe.Webhook.construct_event(
-                payload, sig_header, STRIPE_WEBHOOK_SECRET
-            )
-            return True
-        except (ValueError, stripe.error.SignatureVerificationError):
-            return False
-    
-    def handle_webhook_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Handle incoming Stripe webhook events.
-        Returns action to take in AURA system.
-        """
-        event_type = event.get("type", "")
-        data = event.get("data", {}).get("object", {})
-        
-        handlers = {
-            "payment_intent.succeeded": self._handle_payment_succeeded,
-            "payment_intent.payment_failed": self._handle_payment_failed,
-            "account.updated": self._handle_account_updated,
-            "transfer.created": self._handle_transfer_created,
-            "payout.paid": self._handle_payout_paid,
-            "payout.failed": self._handle_payout_failed,
-        }
-        
-        handler = handlers.get(event_type)
-        if handler:
-            return handler(data)
-        
-        return {"action": "ignore", "event_type": event_type}
-    
-    def _handle_payment_succeeded(self, data: Dict) -> Dict[str, Any]:
-        """Handle successful payment - credit agent wallet"""
-        wallet_id = data.get("metadata", {}).get("wallet_id")
-        amount_cents = data.get("amount", 0)
-        amount_usd = amount_cents / 100
-        
-        return {
-            "action": "deposit",
-            "wallet_id": wallet_id,
-            "amount_usd": amount_usd,
-            "payment_intent_id": data.get("id"),
-            "source": "stripe_deposit"
-        }
-    
-    def _handle_payment_failed(self, data: Dict) -> Dict[str, Any]:
-        """Handle failed payment"""
-        return {
-            "action": "notify_failure",
-            "payment_intent_id": data.get("id"),
-            "error": data.get("last_payment_error", {}).get("message", "Payment failed")
-        }
-    
-    def _handle_account_updated(self, data: Dict) -> Dict[str, Any]:
-        """Handle Connect account updates"""
-        return {
-            "action": "update_account",
-            "stripe_account_id": data.get("id"),
-            "payouts_enabled": data.get("payouts_enabled"),
-            "charges_enabled": data.get("charges_enabled")
-        }
-    
-    def _handle_transfer_created(self, data: Dict) -> Dict[str, Any]:
-        """Handle transfer to connected account"""
-        return {
-            "action": "log_transfer",
-            "transfer_id": data.get("id"),
-            "amount_cents": data.get("amount"),
-            "destination": data.get("destination")
-        }
-    
-    def _handle_payout_paid(self, data: Dict) -> Dict[str, Any]:
-        """Handle successful payout to agent bank"""
-        return {
-            "action": "payout_complete",
-            "payout_id": data.get("id"),
-            "amount_cents": data.get("amount")
-        }
-    
-    def _handle_payout_failed(self, data: Dict) -> Dict[str, Any]:
-        """Handle failed payout"""
-        return {
-            "action": "payout_failed",
-            "payout_id": data.get("id"),
-            "error": data.get("failure_message", "Payout failed")
-        }
+        except ValueError as e:
+            return {"success": False, "error": f"Invalid payload: {e}"}
+        except stripe.error.SignatureVerificationError as e:
+            return {"success": False, "error": f"Invalid signature: {e}"}
 
 
-# Global instance
-stripe_integration = StripeIntegration()
+# Convenience functions
+def create_deposit_link(agent_id: str, wallet_id: str, amount: float) -> dict:
+    """Quick function to create a deposit checkout link"""
+    base_url = os.getenv("APP_URL", "https://nanilabs.io")
+    
+    return StripeService.create_checkout_session(
+        agent_id=agent_id,
+        wallet_id=wallet_id,
+        amount_usd=amount,
+        success_url=f"{base_url}/deposit-success",
+        cancel_url=f"{base_url}/deposit-cancel"
+    )
 
 
-# FastAPI router for Stripe webhooks
-def create_stripe_router():
-    """Create FastAPI router for Stripe webhook endpoints"""
-    from fastapi import APIRouter, Request, HTTPException
+def verify_payment(session_id: str) -> dict:
+    """Quick function to verify a payment was successful"""
+    result = StripeService.retrieve_checkout_session(session_id)
     
-    router = APIRouter(prefix="/stripe", tags=["Stripe"])
+    if result["success"] and result["payment_status"] == "paid":
+        return {
+            "verified": True,
+            "amount": result["amount_total"],
+            "agent_id": result["metadata"].get("agent_id"),
+            "wallet_id": result["metadata"].get("wallet_id")
+        }
     
-    @router.post("/webhook")
-    async def stripe_webhook(request: Request):
-        """Handle incoming Stripe webhooks"""
-        payload = await request.body()
-        sig_header = request.headers.get("stripe-signature", "")
-        
-        if not stripe_integration.verify_webhook_signature(payload, sig_header):
-            raise HTTPException(status_code=400, detail="Invalid signature")
-        
-        import json
-        event = json.loads(payload)
-        result = stripe_integration.handle_webhook_event(event)
-        
-        # TODO: Actually process the action (deposit, etc.)
-        # This would integrate with the main AURA database
-        
-        return {"received": True, "action": result.get("action")}
-    
-    return router
-
-
-# Example usage
-if __name__ == "__main__":
-    integration = StripeIntegration()
-    print(f"Stripe enabled: {integration.enabled}")
-    
-    if integration.enabled:
-        # Example: Create payment intent
-        result = integration.create_payment_intent(
-            amount_usd=100.00,
-            wallet_id="wallet_test123",
-            description="Test deposit"
-        )
-        print(f"Payment intent: {result}")
+    return {
+        "verified": False,
+        "status": result.get("payment_status", "unknown"),
+        "error": result.get("error")
+    }

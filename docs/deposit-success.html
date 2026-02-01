@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit Successful - AURA Wallet | NaniLabs</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 16px;
+            padding: 50px 40px;
+            text-align: center;
+        }
+        .icon {
+            font-size: 5rem;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: #22c55e;
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+        p {
+            color: #aaa;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        #details {
+            background: rgba(34, 197, 94, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        #details p {
+            margin-bottom: 10px;
+            color: #ccc;
+        }
+        #details strong {
+            color: #22c55e;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 30px;
+            background: #22c55e;
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #16a34a;
+        }
+        .secondary-link {
+            display: block;
+            margin-top: 15px;
+            color: #8b5cf6;
+            text-decoration: none;
+        }
+        .secondary-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">✅</div>
+        <h1>Deposit Successful!</h1>
+        <p>Your funds have been added to your AURA wallet.</p>
+        
+        <div id="details" style="display: none;">
+            <p><strong>Amount:</strong> <span id="amount">$0.00</span></p>
+            <p><strong>Wallet:</strong> <span id="wallet-id">-</span></p>
+            <p><strong>New Balance:</strong> <span id="new-balance">$0.00</span></p>
+            <p><strong>Transaction ID:</strong> <span id="tx-id">-</span></p>
+        </div>
+        
+        <a href="/deposit.html" class="btn">Make Another Deposit</a>
+        <a href="/" class="secondary-link">← Back to NaniLabs</a>
+    </div>
+
+    <script>
+        const API_URL = 'https://api.nanilabs.io';
+        
+        window.onload = async function() {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('session_id');
+            
+            if (sessionId) {
+                try {
+                    const resp = await fetch(`${API_URL}/payments/verify`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sessionId })
+                    });
+                    const data = await resp.json();
+                    
+                    if (data.credited || data.status === 'success') {
+                        document.getElementById('details').style.display = 'block';
+                        document.getElementById('amount').textContent = `$${data.amount.toFixed(2)}`;
+                        document.getElementById('wallet-id').textContent = data.wallet_id;
+                        document.getElementById('new-balance').textContent = `$${data.new_balance.toFixed(2)}`;
+                        document.getElementById('tx-id').textContent = data.transaction_id;
+                    }
+                } catch (e) {
+                    console.error('Error verifying:', e);
+                }
+            }
+        };
+    </script>
+</body>
+</html>
