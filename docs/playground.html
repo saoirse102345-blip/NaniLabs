@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA Playground - Try the API Live</title>
+    <meta name="description" content="Try AURA Infra API live in your browser. Create wallets, make transfers, and see the Stripe for AI Agents in action.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0a0a0f', 800: '#12121a', 700: '#1a1a24', 600: '#24242e' },
+                        aura: { 500: '#8b5cf6', 600: '#7c3aed', 400: '#a78bfa' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0a0a0f; }
+        code, pre { font-family: 'JetBrains Mono', monospace; }
+        .gradient-text { background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+    <nav class="container mx-auto px-6 py-6 flex items-center justify-between border-b border-dark-700">
+        <a href="/" class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-aura-500 to-cyan-500 flex items-center justify-center text-xl">🏦</div>
+            <span class="text-xl font-bold">AURA Playground</span>
+        </a>
+        <div class="flex items-center gap-4">
+            <span class="text-green-400 text-sm flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                API Live
+            </span>
+            <a href="/" class="px-4 py-2 bg-dark-700 hover:bg-dark-600 rounded-lg transition">← Back</a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-12">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold mb-4">
+                    <span class="gradient-text">Try AURA Live</span>
+                </h1>
+                <p class="text-xl text-gray-400">No signup required. Play with real API calls.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Actions Panel -->
+                <div class="space-y-6">
+                    <!-- Create Agent -->
+                    <div class="bg-dark-800 rounded-xl p-6 border border-dark-600">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="text-2xl">🤖</span> 1. Register Your Agent
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Agent Name</label>
+                                <input type="text" id="agentName" placeholder="MyTradingBot" 
+                                    class="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:border-aura-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Agent Type</label>
+                                <select id="agentType" class="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:border-aura-500">
+                                    <option value="trading">Trading Bot</option>
+                                    <option value="content">Content Creator</option>
+                                    <option value="assistant">AI Assistant</option>
+                                    <option value="automation">Automation Agent</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <button onclick="registerAgent()" class="w-full px-6 py-3 bg-aura-500 hover:bg-aura-600 rounded-lg font-semibold transition">
+                                Register Agent →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Deposit -->
+                    <div class="bg-dark-800 rounded-xl p-6 border border-dark-600">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="text-2xl">💰</span> 2. Deposit Funds
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Wallet ID</label>
+                                <input type="text" id="depositWallet" placeholder="wallet_xxx" 
+                                    class="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:border-aura-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Amount ($)</label>
+                                <input type="number" id="depositAmount" placeholder="100.00" step="0.01"
+                                    class="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:border-aura-500">
+                            </div>
+                            <button onclick="deposit()" class="w-full px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition">
+                                Deposit →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Transfer -->
+                    <div class="bg-dark-800 rounded-xl p-6 border border-dark-600">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="text-2xl">⚡</span> 3. Transfer (2.9% fee)
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-2">From Wallet</label>
+                                    <input type="text" id="fromWallet" placeholder="wallet_xxx" 
+                                        class="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:border-aura-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-2">To Wallet</label>
+                                    <input type="text" id="toWallet" placeholder="wallet_yyy" 
+                                        class="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:border-aura-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Amount ($)</label>
+                                <input type="number" id="transferAmount" placeholder="50.00" step="0.01"
+                                    class="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:border-aura-500">
+                            </div>
+                            <button onclick="transfer()" class="w-full px-6 py-3 bg-cyan-600 hover:bg-cyan-700 rounded-lg font-semibold transition">
+                                Transfer →
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Check Balance -->
+                    <div class="bg-dark-800 rounded-xl p-6 border border-dark-600">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="text-2xl">📊</span> Check Balance
+                        </h3>
+                        <div class="flex gap-4">
+                            <input type="text" id="balanceWallet" placeholder="wallet_xxx" 
+                                class="flex-1 px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:border-aura-500">
+                            <button onclick="checkBalance()" class="px-6 py-3 bg-dark-600 hover:bg-dark-700 rounded-lg font-semibold transition">
+                                Check
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="space-y-6">
+                    <!-- Platform Stats -->
+                    <div class="bg-dark-800 rounded-xl p-6 border border-dark-600">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="text-2xl">📈</span> Platform Stats (Live)
+                        </h3>
+                        <div id="stats" class="grid grid-cols-2 gap-4">
+                            <div class="bg-dark-700 rounded-lg p-4">
+                                <div class="text-3xl font-bold text-aura-400" id="statAgents">-</div>
+                                <div class="text-gray-400 text-sm">Total Agents</div>
+                            </div>
+                            <div class="bg-dark-700 rounded-lg p-4">
+                                <div class="text-3xl font-bold text-cyan-400" id="statWallets">-</div>
+                                <div class="text-gray-400 text-sm">Total Wallets</div>
+                            </div>
+                            <div class="bg-dark-700 rounded-lg p-4">
+                                <div class="text-3xl font-bold text-green-400" id="statVolume">-</div>
+                                <div class="text-gray-400 text-sm">Total Volume</div>
+                            </div>
+                            <div class="bg-dark-700 rounded-lg p-4">
+                                <div class="text-3xl font-bold text-pink-400" id="statTx">-</div>
+                                <div class="text-gray-400 text-sm">Transactions</div>
+                            </div>
+                        </div>
+                        <button onclick="loadStats()" class="w-full mt-4 px-4 py-2 bg-dark-600 hover:bg-dark-700 rounded-lg text-sm transition">
+                            🔄 Refresh Stats
+                        </button>
+                    </div>
+
+                    <!-- API Response -->
+                    <div class="bg-dark-800 rounded-xl p-6 border border-dark-600">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="text-2xl">📋</span> API Response
+                        </h3>
+                        <pre id="response" class="bg-dark-900 rounded-lg p-4 text-sm overflow-x-auto max-h-96 overflow-y-auto text-gray-300">
+// Results will appear here
+// Try registering an agent to start!</pre>
+                    </div>
+
+                    <!-- Your Created Wallets -->
+                    <div class="bg-dark-800 rounded-xl p-6 border border-dark-600">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="text-2xl">💳</span> Your Session Wallets
+                        </h3>
+                        <div id="myWallets" class="space-y-2 text-sm">
+                            <p class="text-gray-500">No wallets created yet. Register an agent above!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Examples -->
+            <div class="mt-12 bg-dark-800 rounded-xl p-8 border border-dark-600">
+                <h3 class="text-xl font-bold mb-6">📚 Use These Endpoints in Your Code</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-aura-400">Python</h4>
+                        <pre class="bg-dark-900 rounded-lg p-4 text-sm overflow-x-auto"><code class="text-gray-300">import requests
+
+# Register agent
+resp = requests.post(
+    "https://api.nanilabs.io/agents/register",
+    json={
+        "name": "MyBot",
+        "type": "trading"
+    }
+)
+data = resp.json()
+wallet_id = data["wallet"]["id"]
+api_key = data["api_key"]
+
+# Deposit
+requests.post(
+    f"https://api.nanilabs.io/wallets/{wallet_id}/deposit",
+    json={"amount": 100, "source": "revenue"}
+)</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-cyan-400">JavaScript</h4>
+                        <pre class="bg-dark-900 rounded-lg p-4 text-sm overflow-x-auto"><code class="text-gray-300">// Register agent
+const resp = await fetch(
+  "https://api.nanilabs.io/agents/register",
+  {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      name: "MyBot",
+      type: "trading"
+    })
+  }
+);
+const {wallet, api_key} = await resp.json();
+
+// Deposit
+await fetch(`https://api.nanilabs.io/wallets/${wallet.id}/deposit`, {
+  method: "POST",
+  headers: {"Content-Type": "application/json"},
+  body: JSON.stringify({amount: 100, source: "revenue"})
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-dark-700 py-8 mt-12">
+        <div class="container mx-auto px-6 text-center text-gray-500">
+            <p>AURA Infra by <a href="https://nanilabs.io" class="text-aura-400 hover:underline">NaniLabs</a> — Building the infrastructure for the Agent Economy</p>
+        </div>
+    </footer>
+
+    <script>
+        const API = 'https://api.nanilabs.io';
+        let sessionWallets = [];
+
+        async function api(endpoint, method = 'GET', body = null) {
+            const opts = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) opts.body = JSON.stringify(body);
+            
+            const resp = await fetch(API + endpoint, opts);
+            return resp.json();
+        }
+
+        function showResponse(data) {
+            document.getElementById('response').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function loadStats() {
+            try {
+                const stats = await api('/stats');
+                document.getElementById('statAgents').textContent = stats.total_agents;
+                document.getElementById('statWallets').textContent = stats.total_wallets;
+                document.getElementById('statVolume').textContent = '$' + stats.total_volume.toFixed(2);
+                document.getElementById('statTx').textContent = stats.total_transactions;
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+
+        async function registerAgent() {
+            const name = document.getElementById('agentName').value || 'TestAgent';
+            const type = document.getElementById('agentType').value;
+            
+            const data = await api('/agents/register', 'POST', { name, type, description: 'Created via playground' });
+            showResponse(data);
+            
+            if (data.wallet) {
+                sessionWallets.push(data.wallet);
+                updateWalletsList();
+                document.getElementById('depositWallet').value = data.wallet.id;
+                document.getElementById('fromWallet').value = data.wallet.id;
+            }
+            loadStats();
+        }
+
+        async function deposit() {
+            const wallet_id = document.getElementById('depositWallet').value;
+            const amount = parseFloat(document.getElementById('depositAmount').value) || 100;
+            
+            const data = await api(`/wallets/${wallet_id}/deposit`, 'POST', { 
+                amount, 
+                source: 'playground_test' 
+            });
+            showResponse(data);
+            loadStats();
+        }
+
+        async function transfer() {
+            const from = document.getElementById('fromWallet').value;
+            const to = document.getElementById('toWallet').value;
+            const amount = parseFloat(document.getElementById('transferAmount').value) || 50;
+            
+            const data = await api(`/wallets/${from}/transfer`, 'POST', {
+                to_wallet_id: to,
+                amount,
+                description: 'Playground transfer'
+            });
+            showResponse(data);
+            loadStats();
+        }
+
+        async function checkBalance() {
+            const wallet_id = document.getElementById('balanceWallet').value;
+            const data = await api(`/wallets/${wallet_id}/balance`);
+            showResponse(data);
+        }
+
+        function updateWalletsList() {
+            const el = document.getElementById('myWallets');
+            if (sessionWallets.length === 0) {
+                el.innerHTML = '<p class="text-gray-500">No wallets created yet.</p>';
+                return;
+            }
+            el.innerHTML = sessionWallets.map(w => `
+                <div class="bg-dark-700 rounded-lg p-3 flex justify-between items-center">
+                    <div>
+                        <div class="font-mono text-aura-400">${w.id}</div>
+                        <div class="text-gray-400">${w.agent_name}</div>
+                    </div>
+                    <button onclick="document.getElementById('balanceWallet').value='${w.id}';checkBalance();" 
+                        class="text-xs px-2 py-1 bg-dark-600 rounded hover:bg-dark-500">Check</button>
+                </div>
+            `).join('');
+        }
+
+        // Load stats on page load
+        loadStats();
+    </script>
+</body>
+</html>
