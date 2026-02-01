@@ -1,14 +1,10 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "meat.nanilabs.io" }],
-      "destination": "/meat/:path*"
-    },
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "hive.nanilabs.io" }],
-      "destination": "/hive/:path*"
-    }
+    { "source": "/", "destination": "/meat/index.html", "has": [{ "type": "host", "value": "meat.nanilabs.io" }] },
+    { "source": "/:path*", "destination": "/meat/:path*", "has": [{ "type": "host", "value": "meat.nanilabs.io" }] },
+    { "source": "/", "destination": "/hive/index.html", "has": [{ "type": "host", "value": "hive.nanilabs.io" }] },
+    { "source": "/:path*", "destination": "/hive/:path*", "has": [{ "type": "host", "value": "hive.nanilabs.io" }] }
   ]
 }
