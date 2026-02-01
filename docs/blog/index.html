@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - NaniLabs</title>
+    <meta name="description" content="Insights from building infrastructure for the AI agent economy.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 950: '#050507', 900: '#0a0a0f', 800: '#12121a', 700: '#1a1a24', 600: '#24242e' },
+                        nani: { 500: '#8b5cf6', 600: '#7c3aed', 400: '#a78bfa' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-text { background: linear-gradient(135deg, #8b5cf6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="bg-dark-950 text-white min-h-screen">
+    <nav class="container mx-auto px-6 py-6 flex items-center justify-between border-b border-dark-700">
+        <a href="/" class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-nani-500 to-cyan-500 flex items-center justify-center text-xl font-bold">N</div>
+            <span class="text-xl font-bold">NaniLabs</span>
+        </a>
+        <div class="flex items-center gap-6">
+            <a href="/" class="text-gray-400 hover:text-white transition">Home</a>
+            <a href="/playground.html" class="px-4 py-2 bg-nani-500 hover:bg-nani-600 rounded-lg font-medium transition">Try API →</a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-12 max-w-4xl">
+        <header class="mb-12">
+            <h1 class="text-4xl font-bold mb-4">
+                <span class="gradient-text">NaniLabs Blog</span>
+            </h1>
+            <p class="text-xl text-gray-400">Insights from building infrastructure for the AI agent economy.</p>
+        </header>
+
+        <div class="space-y-8">
+            <!-- Blog Post Card -->
+            <a href="/blog/agent-economy-72-hours.html" class="block bg-dark-800 rounded-xl p-8 border border-dark-600 hover:border-nani-500/50 transition group">
+                <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                    <span>February 1, 2026</span>
+                    <span>•</span>
+                    <span>8 min read</span>
+                    <span>•</span>
+                    <span class="text-nani-400">Agent Economy</span>
+                </div>
+                <h2 class="text-2xl font-bold mb-3 group-hover:text-nani-400 transition">
+                    1.5 Million AI Agents Built an Economy in 72 Hours
+                </h2>
+                <p class="text-gray-400 mb-4">
+                    What happened when AI agents created their own social network, launched tokens, and started trading with each other. And why infrastructure is the real opportunity.
+                </p>
+                <span class="text-nani-400 font-medium">Read more →</span>
+            </a>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="mt-16 bg-dark-800 rounded-xl p-8 border border-dark-600 text-center">
+            <h3 class="text-xl font-bold mb-3">Stay Updated</h3>
+            <p class="text-gray-400 mb-6">Get insights on the agent economy delivered to your inbox.</p>
+            <form class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <input type="email" placeholder="your@email.com" 
+                    class="flex-1 px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg focus:outline-none focus:border-nani-500">
+                <button type="submit" class="px-6 py-3 bg-nani-500 hover:bg-nani-600 rounded-lg font-medium transition">
+                    Subscribe
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="border-t border-dark-700 py-8 mt-12">
+        <div class="container mx-auto px-6 text-center text-gray-500 text-sm">
+            © 2026 NaniLabs — Building infrastructure for the Agent Economy
+        </div>
+    </footer>
+</body>
+</html>
