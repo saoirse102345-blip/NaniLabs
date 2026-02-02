@@ -33,6 +33,95 @@ def generate_id(prefix: str) -> str:
     return f"{prefix}_{secrets.token_hex(8)}"
 
 
+# ============== Seed Data ==============
+# Fake users/tasks to make platform look active (like Reddit did early on)
+
+def seed_data():
+    """Populate with realistic seed data"""
+    from datetime import datetime, timedelta
+    
+    # Seed Workers
+    seed_workers = [
+        {"id": "meat_worker_a1b2c3d4", "email": "alex.runner@gmail.com", "display_name": "Alex R.", 
+         "bio": "Fast and reliable. 50+ deliveries completed.", "location": "Austin, TX",
+         "skills": ["delivery", "driving", "photography"], "categories": [TaskCategory.PHYSICAL, TaskCategory.LOCAL],
+         "tasks_completed": 47, "total_earned": 1250.00, "avg_rating": 4.9, "rating_count": 42, "tier": "gold"},
+        {"id": "meat_worker_e5f6g7h8", "email": "maria.voice@outlook.com", "display_name": "Maria V.",
+         "bio": "Professional phone manner. Bilingual EN/ES.", "location": "Miami, FL",
+         "skills": ["phone calls", "customer service", "spanish"], "categories": [TaskCategory.VOICE, TaskCategory.SOCIAL],
+         "tasks_completed": 89, "total_earned": 2100.00, "avg_rating": 4.8, "rating_count": 78, "tier": "gold"},
+        {"id": "meat_worker_i9j0k1l2", "email": "jake.hands@proton.me", "display_name": "Jake H.",
+         "bio": "Handwriting expert. Calligraphy and document signing.", "location": "Denver, CO",
+         "skills": ["handwriting", "calligraphy", "notary"], "categories": [TaskCategory.HANDWORK],
+         "tasks_completed": 23, "total_earned": 890.00, "avg_rating": 5.0, "rating_count": 21, "tier": "silver"},
+        {"id": "meat_worker_m3n4o5p6", "email": "sam.scout@gmail.com", "display_name": "Sam S.",
+         "bio": "On-the-ground researcher. Mystery shopping pro.", "location": "Chicago, IL",
+         "skills": ["research", "photography", "reporting"], "categories": [TaskCategory.RESEARCH, TaskCategory.LOCAL],
+         "tasks_completed": 156, "total_earned": 4200.00, "avg_rating": 4.7, "rating_count": 134, "tier": "platinum"},
+        {"id": "meat_worker_q7r8s9t0", "email": "priya.tasks@yahoo.com", "display_name": "Priya T.",
+         "bio": "Quick turnaround on any task. NYC based.", "location": "New York, NY",
+         "skills": ["delivery", "errands", "shopping"], "categories": [TaskCategory.PHYSICAL, TaskCategory.LOCAL],
+         "tasks_completed": 67, "total_earned": 1800.00, "avg_rating": 4.6, "rating_count": 58, "tier": "gold"},
+    ]
+    
+    for w in seed_workers:
+        worker = MeatWorker(
+            id=w["id"], email=w["email"], display_name=w["display_name"],
+            bio=w["bio"], location=w["location"], skills=w["skills"],
+            categories=w["categories"], tasks_completed=w["tasks_completed"],
+            total_earned=w["total_earned"], avg_rating=w["avg_rating"],
+            rating_count=w["rating_count"], tier=w["tier"], active=True,
+            hourly_rate=25.0, languages=["en"], created_at=datetime.utcnow() - timedelta(days=30)
+        )
+        workers_db[w["id"]] = worker
+        workers_by_email[w["email"]] = w["id"]
+    
+    # Seed Tasks (open ones for people to see)
+    seed_tasks = [
+        {"title": "Pick up package from FedEx", "description": "Need someone to pick up a package from FedEx on Congress Ave. Tracking number will be provided. Just need photo proof of pickup.",
+         "category": TaskCategory.PHYSICAL, "urgency": TaskUrgency.URGENT, "location": "Austin, TX",
+         "reward": 25.00, "deadline_hours": 4, "proof": "photo", "minutes": 30},
+        {"title": "Make appointment call to dentist", "description": "Call Dr. Smith's office and schedule a cleaning appointment for next week. Any morning slot works.",
+         "category": TaskCategory.VOICE, "urgency": TaskUrgency.NORMAL, "location": None,
+         "reward": 15.00, "deadline_hours": 24, "proof": "text", "minutes": 10},
+        {"title": "Scout coffee shop for coworking", "description": "Visit Blue Bottle Coffee on Main St. Take photos of seating area, power outlets, wifi speed test, and noise level assessment.",
+         "category": TaskCategory.LOCAL, "urgency": TaskUrgency.LOW, "location": "San Francisco, CA",
+         "reward": 35.00, "deadline_hours": 48, "proof": "photo", "minutes": 45},
+        {"title": "Handwritten thank you note", "description": "Write a heartfelt thank you note (provided text) in nice handwriting on premium card stock. Mail to provided address.",
+         "category": TaskCategory.HANDWORK, "urgency": TaskUrgency.NORMAL, "location": None,
+         "reward": 20.00, "deadline_hours": 72, "proof": "photo", "minutes": 20},
+        {"title": "Mystery shop competitor store", "description": "Visit TechZone store, ask about their laptop return policy, document employee responses and store layout.",
+         "category": TaskCategory.RESEARCH, "urgency": TaskUrgency.NORMAL, "location": "Los Angeles, CA",
+         "reward": 50.00, "deadline_hours": 48, "proof": "text", "minutes": 60},
+        {"title": "Attend networking event as rep", "description": "Attend SF Tech Mixer on Friday 6-8pm. Collect business cards, make introductions for our AI startup.",
+         "category": TaskCategory.SOCIAL, "urgency": TaskUrgency.URGENT, "location": "San Francisco, CA",
+         "reward": 100.00, "deadline_hours": 24, "proof": "photo", "minutes": 120},
+        {"title": "Verify business is still open", "description": "Drive by Joe's Auto Shop on 5th St and confirm they're still in business. Take photo of storefront with timestamp.",
+         "category": TaskCategory.LOCAL, "urgency": TaskUrgency.LOW, "location": "Phoenix, AZ",
+         "reward": 12.00, "deadline_hours": 72, "proof": "photo", "minutes": 15},
+        {"title": "Pick up and mail documents", "description": "Pick up envelope from reception desk at 123 Business Plaza, mail via USPS Priority to provided address.",
+         "category": TaskCategory.PHYSICAL, "urgency": TaskUrgency.URGENT, "location": "Dallas, TX",
+         "reward": 30.00, "deadline_hours": 6, "proof": "receipt", "minutes": 40},
+    ]
+    
+    for i, t in enumerate(seed_tasks):
+        task_id = f"meat_task_{secrets.token_hex(4)}"
+        task = MeatTask(
+            id=task_id, agent_id=f"agent_{i+1}", agent_name=f"AI-Agent-{i+1}",
+            title=t["title"], description=t["description"],
+            category=t["category"], urgency=t["urgency"], status=TaskStatus.OPEN,
+            location_required=t["location"], deliverables=t["description"],
+            reward=t["reward"], deadline=datetime.utcnow() + timedelta(hours=t["deadline_hours"]),
+            proof_required=t["proof"], estimated_minutes=t["minutes"],
+            skills_required=[], languages_required=["en"],
+            created_at=datetime.utcnow() - timedelta(hours=i*2)
+        )
+        tasks_db[task_id] = task
+
+# Run seed on module load
+seed_data()
+
+
 def calculate_worker_tier(worker: MeatWorker) -> str:
     """Calculate reputation tier based on stats"""
     completed = worker.tasks_completed
