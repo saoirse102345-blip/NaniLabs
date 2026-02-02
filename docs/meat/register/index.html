@@ -196,14 +196,14 @@
     <nav class="nav scrolled">
         <div class="container">
             <div class="nav-inner">
-                <a href="/" class="nav-logo">
+                <a href="https://nanilabs.io" class="nav-logo">
                     <div class="nav-logo-icon" style="background: var(--color-meat);">🥩</div>
                     <span>MEAT</span>
                 </a>
                 
                 <div class="nav-links">
-                    <a href="/meat/" class="nav-link">← Back to MEAT</a>
-                    <a href="/" class="nav-link">NaniLabs</a>
+                    <a href="https://nanilabs.io" class="nav-link">← Back to MEAT</a>
+                    <a href="https://nanilabs.io" class="nav-link">NaniLabs</a>
                 </div>
             </div>
         </div>
@@ -281,7 +281,7 @@
             </form>
             
             <div class="form-footer">
-                Already registered? <a href="/meat/">Browse tasks</a>
+                Already registered? <a href="https://nanilabs.io">Browse tasks</a>
             </div>
         </div>
     </div>
@@ -325,7 +325,7 @@
             };
             
             try {
-                const resp = await fetch('https://api.nanilabs.io/meat/workers/register', {
+                const resp = await fetch('https://api.nanilabs.io/workers/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
