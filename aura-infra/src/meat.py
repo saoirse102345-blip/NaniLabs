@@ -14,6 +14,11 @@ from meat_models import (
     MeatClaim, MeatSubmission, MeatReview, MeatDispute, MeatStats,
     TaskCategory, TaskStatus, TaskUrgency
 )
+from meat_payments import (
+    escrow_funds, release_escrow, refund_escrow,
+    register_worker_payout, pay_worker, get_payment_stats,
+    PLATFORM_FEE_PERCENT, MIN_TASK_REWARD, MAX_TASK_REWARD
+)
 
 router = APIRouter(prefix="/meat", tags=["MEAT - Human Labor"])
 
@@ -297,10 +302,21 @@ async def create_task(
     task: MeatTaskCreate,
     x_agent_id: str = Header(..., alias="X-Agent-ID")
 ):
-    """Agent posts a task for humans"""
+    """Agent posts a task for humans - escrows funds from AURA wallet"""
+    
+    # Validate reward amount
+    if task.reward < MIN_TASK_REWARD:
+        raise HTTPException(400, f"Minimum reward is ${MIN_TASK_REWARD}")
+    if task.reward > MAX_TASK_REWARD:
+        raise HTTPException(400, f"Maximum reward is ${MAX_TASK_REWARD}")
     
     task_id = generate_id("meat_task")
     deadline = datetime.utcnow() + timedelta(hours=task.deadline_hours)
+    
+    # Escrow funds from agent's AURA wallet
+    escrow = await escrow_funds(x_agent_id, task_id, task.reward)
+    if not escrow:
+        raise HTTPException(402, "Insufficient AURA credits. Top up your wallet first.")
     
     new_task = MeatTask(
         id=task_id,
@@ -316,6 +332,7 @@ async def create_task(
         languages_required=task.languages_required,
         reward=task.reward,
         bonus_fast=task.bonus_fast,
+        escrow_tx_id=escrow.id,
         deadline=deadline,
         estimated_minutes=task.estimated_minutes,
         proof_required=task.proof_required,
@@ -324,10 +341,19 @@ async def create_task(
     
     tasks_db[task_id] = new_task
     
+    platform_fee = task.reward * PLATFORM_FEE_PERCENT
+    worker_gets = task.reward - platform_fee
+    
     return {
         "status": "posted",
         "task": new_task,
-        "message": f"Task posted. {len([w for w in workers_db.values() if w.active])} workers available."
+        "escrow": {
+            "id": escrow.id,
+            "amount": task.reward,
+            "platform_fee": platform_fee,
+            "worker_receives": worker_gets
+        },
+        "message": f"Task posted. ${task.reward} escrowed. Worker will receive ${worker_gets:.2f}."
     }
 
 
@@ -491,7 +517,7 @@ async def approve_submission(
     rating: int = Query(5, ge=1, le=5),
     x_agent_id: str = Header(..., alias="X-Agent-ID")
 ):
-    """Agent approves submission and releases payment"""
+    """Agent approves submission and releases payment to worker"""
     
     if task_id not in tasks_db:
         raise HTTPException(404, "Task not found")
@@ -503,6 +529,14 @@ async def approve_submission(
     
     if task.status != TaskStatus.SUBMITTED:
         raise HTTPException(400, f"No submission to approve (status: {task.status.value})")
+    
+    # Release escrowed funds to worker
+    escrow = await release_escrow(task_id, task.claimed_by)
+    if not escrow:
+        raise HTTPException(500, "Failed to release payment - escrow not found")
+    
+    # Pay worker
+    payout_result = await pay_worker(task.claimed_by, escrow.worker_payout, task_id)
     
     # Find submission
     submission = None
@@ -564,11 +598,13 @@ async def approve_submission(
         "worker": worker,
         "payment": {
             "reward": task.reward,
+            "platform_fee": escrow.platform_fee,
+            "worker_received": escrow.worker_payout,
             "bonus": bonus,
-            "total": task.reward + bonus,
-            "note": "Payment would be sent via AURA"  # TODO: Integrate AURA
+            "total": escrow.worker_payout + bonus,
+            "payout": payout_result
         },
-        "message": f"Work approved. Human has been paid {task.reward + bonus} credits."
+        "message": f"Work approved! ${escrow.worker_payout:.2f} sent to worker."
     }
 
 
@@ -791,4 +827,77 @@ async def my_earnings(
             {"task_id": t.id, "amount": t.reward, "completed": t.completed_at}
             for t in sorted(completed_tasks, key=lambda x: x.completed_at, reverse=True)[:10]
         ]
+    }
+
+
+# ============== Payout Endpoints ==============
+
+@router.post("/my/payout-method")
+async def set_payout_method(
+    method: str,  # "stripe_connect", "paypal", "bank_transfer"
+    email: Optional[str] = None,
+    account_details: Optional[dict] = None,
+    x_worker_id: str = Header(..., alias="X-Worker-ID")
+):
+    """Set up how you want to receive payments"""
+    
+    if x_worker_id not in workers_db:
+        raise HTTPException(404, "Worker not found")
+    
+    details = {}
+    if email:
+        details["email"] = email
+    if account_details:
+        details.update(account_details)
+    
+    payout_method = await register_worker_payout(x_worker_id, method, details)
+    
+    return {
+        "status": "saved",
+        "payout_method": {
+            "method": payout_method.method,
+            "verified": payout_method.verified
+        },
+        "message": f"Payout method set to {method}. Earnings will be sent here."
+    }
+
+
+@router.get("/my/payout-method")
+async def get_payout_method(
+    x_worker_id: str = Header(..., alias="X-Worker-ID")
+):
+    """Get current payout method"""
+    
+    from meat_payments import worker_payouts_db
+    
+    if x_worker_id not in workers_db:
+        raise HTTPException(404, "Worker not found")
+    
+    payout_method = worker_payouts_db.get(x_worker_id)
+    
+    if not payout_method:
+        return {
+            "payout_method": None,
+            "message": "No payout method set. Set one to receive payments."
+        }
+    
+    return {
+        "payout_method": {
+            "method": payout_method.method,
+            "verified": payout_method.verified
+        }
+    }
+
+
+# ============== Platform Stats ==============
+
+@router.get("/platform/payment-stats")
+async def get_platform_payment_stats():
+    """Get platform-wide payment statistics"""
+    
+    stats = get_payment_stats()
+    
+    return {
+        "payments": stats,
+        "platform_fee_percent": PLATFORM_FEE_PERCENT * 100
     }
