@@ -346,3 +346,129 @@ async def get_stripe_balance():
         raise HTTPException(status_code=500, detail=result.get("error"))
     
     return result
+
+
+# ==================== STRIPE CONNECT (Worker Payouts) ====================
+
+class CreateConnectAccountRequest(BaseModel):
+    worker_id: str
+    email: str
+    country: str = "US"
+
+
+class WorkerOnboardingRequest(BaseModel):
+    worker_id: str
+    account_id: str
+
+
+@router.post("/connect/create-account")
+async def create_worker_connect_account(request: CreateConnectAccountRequest):
+    """
+    Create a Stripe Connect Express account for a MEAT worker.
+    This allows them to receive payouts for completed tasks.
+    """
+    result = StripeService.create_connect_account(
+        worker_id=request.worker_id,
+        email=request.email,
+        country=request.country
+    )
+    
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=result.get("error"))
+    
+    return {
+        "status": "account_created",
+        "account_id": result["account_id"],
+        "message": "Stripe Connect account created. Complete onboarding to receive payouts."
+    }
+
+
+@router.post("/connect/onboarding-link")
+async def create_onboarding_link(request: WorkerOnboardingRequest):
+    """
+    Generate a link for the worker to complete Stripe onboarding.
+    They'll verify identity, add bank account, etc.
+    """
+    base_url = os.getenv("APP_URL", "https://meat.nanilabs.io")
+    
+    result = StripeService.create_connect_onboarding_link(
+        account_id=request.account_id,
+        return_url=f"{base_url}/payout-setup-complete",
+        refresh_url=f"{base_url}/payout-setup-refresh"
+    )
+    
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=result.get("error"))
+    
+    return {
+        "status": "link_created",
+        "onboarding_url": result["onboarding_url"],
+        "expires_at": result["expires_at"],
+        "message": "Redirect worker to this URL to complete payout setup."
+    }
+
+
+@router.get("/connect/account/{account_id}")
+async def get_connect_account_status(account_id: str):
+    """Check if a worker's Stripe Connect account is ready for payouts"""
+    result = StripeService.get_connect_account(account_id)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=404, detail=result.get("error"))
+    
+    return {
+        "account_id": result["account_id"],
+        "payouts_enabled": result["payouts_enabled"],
+        "charges_enabled": result["charges_enabled"],
+        "details_submitted": result["details_submitted"],
+        "ready": result["payouts_enabled"] and result["details_submitted"]
+    }
+
+
+@router.post("/connect/transfer")
+async def transfer_to_worker(
+    account_id: str,
+    amount: float,
+    task_id: str,
+    description: str = "MEAT Task Payment"
+):
+    """
+    Transfer funds to a worker's connected account.
+    Called when agent approves a MEAT task.
+    """
+    if amount < 1:
+        raise HTTPException(status_code=400, detail="Minimum transfer is $1.00")
+    
+    result = StripeService.transfer_to_worker(
+        account_id=account_id,
+        amount_usd=amount,
+        task_id=task_id,
+        description=description
+    )
+    
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=result.get("error"))
+    
+    return {
+        "status": "transferred",
+        "transfer_id": result["transfer_id"],
+        "amount": amount,
+        "destination": account_id,
+        "message": f"${amount:.2f} sent to worker!"
+    }
+
+
+@router.get("/connect/worker-balance/{account_id}")
+async def get_worker_balance(account_id: str):
+    """Get a worker's pending and available balance"""
+    result = StripeService.get_worker_balance(account_id)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=500, detail=result.get("error"))
+    
+    return {
+        "account_id": account_id,
+        "available": result["available"],
+        "pending": result["pending"],
+        "total": result["available"] + result["pending"]
+    }

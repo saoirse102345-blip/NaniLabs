@@ -160,6 +160,7 @@ async def refund_escrow(task_id: str, reason: str) -> Optional[EscrowRecord]:
 
 async def register_worker_payout(worker_id: str, method: str, details: dict) -> WorkerPayoutMethod:
     """Register how a worker wants to be paid"""
+    from stripe_integration import StripeService
     
     payout_method = WorkerPayoutMethod(
         worker_id=worker_id,
@@ -168,18 +169,58 @@ async def register_worker_payout(worker_id: str, method: str, details: dict) -> 
         verified=False
     )
     
-    worker_payouts_db[worker_id] = payout_method
+    # For Stripe Connect, create connected account
+    if method == "stripe_connect":
+        email = details.get("email")
+        country = details.get("country", "US")
+        
+        if not email:
+            raise ValueError("Email required for Stripe Connect")
+        
+        # Create Stripe Connect Express account
+        result = StripeService.create_connect_account(
+            worker_id=worker_id,
+            email=email,
+            country=country
+        )
+        
+        if result.get("success"):
+            payout_method.details["stripe_account_id"] = result["account_id"]
+            payout_method.details["onboarding_required"] = True
+        else:
+            raise ValueError(f"Failed to create Stripe account: {result.get('error')}")
     
-    # TODO: For Stripe Connect, create connected account
-    # if method == "stripe_connect":
-    #     account = stripe.Account.create(type="express", email=details.get("email"))
-    #     payout_method.details["stripe_account_id"] = account.id
+    worker_payouts_db[worker_id] = payout_method
     
     return payout_method
 
 
+async def get_worker_onboarding_link(worker_id: str, return_url: str = None) -> dict:
+    """Get Stripe Connect onboarding link for worker"""
+    from stripe_integration import StripeService
+    
+    payout_method = worker_payouts_db.get(worker_id)
+    if not payout_method or payout_method.method != "stripe_connect":
+        return {"success": False, "error": "No Stripe Connect account"}
+    
+    account_id = payout_method.details.get("stripe_account_id")
+    if not account_id:
+        return {"success": False, "error": "Stripe account ID not found"}
+    
+    base_url = return_url or "https://meat.nanilabs.io"
+    
+    result = StripeService.create_connect_onboarding_link(
+        account_id=account_id,
+        return_url=f"{base_url}/payout-setup-complete",
+        refresh_url=f"{base_url}/payout-setup-refresh"
+    )
+    
+    return result
+
+
 async def pay_worker(worker_id: str, amount: float, task_id: str) -> dict:
-    """Pay a worker for completed task"""
+    """Pay a worker for completed task via Stripe Connect"""
+    from stripe_integration import StripeService
     
     payout_method = worker_payouts_db.get(worker_id)
     
@@ -187,37 +228,68 @@ async def pay_worker(worker_id: str, amount: float, task_id: str) -> dict:
         # No payout method registered - hold funds
         return {
             "status": "pending",
-            "message": "Worker needs to set up payout method",
+            "message": "Worker needs to set up payout method at meat.nanilabs.io/payout-setup",
             "amount": amount,
             "held": True
         }
     
     if payout_method.method == "stripe_connect":
-        # TODO: Stripe Connect transfer
-        # transfer = stripe.Transfer.create(
-        #     amount=int(amount * 100),
-        #     currency="usd",
-        #     destination=payout_method.details["stripe_account_id"],
-        #     metadata={"task_id": task_id, "worker_id": worker_id}
-        # )
-        return {
-            "status": "sent",
-            "method": "stripe_connect",
-            "amount": amount,
-            # "transfer_id": transfer.id
-        }
+        account_id = payout_method.details.get("stripe_account_id")
+        if not account_id:
+            return {
+                "status": "error",
+                "message": "Stripe account not found. Worker needs to complete onboarding.",
+                "amount": amount
+            }
+        
+        # Check if account is ready for payouts
+        account_status = StripeService.get_connect_account(account_id)
+        if not account_status.get("success") or not account_status.get("payouts_enabled"):
+            return {
+                "status": "pending",
+                "message": "Worker's Stripe account not yet verified. Funds held.",
+                "amount": amount,
+                "held": True
+            }
+        
+        # Transfer funds to worker
+        transfer_result = StripeService.transfer_to_worker(
+            account_id=account_id,
+            amount_usd=amount,
+            task_id=task_id,
+            description=f"MEAT Task Payment - {task_id}"
+        )
+        
+        if transfer_result.get("success"):
+            return {
+                "status": "sent",
+                "method": "stripe_connect",
+                "amount": amount,
+                "transfer_id": transfer_result.get("transfer_id"),
+                "message": f"${amount:.2f} transferred to worker's bank!"
+            }
+        else:
+            return {
+                "status": "error",
+                "method": "stripe_connect",
+                "amount": amount,
+                "error": transfer_result.get("error"),
+                "held": True
+            }
     
     elif payout_method.method == "paypal":
-        # TODO: PayPal payout
+        # PayPal payout - hold for manual processing
         return {
-            "status": "sent",
+            "status": "pending_manual",
             "method": "paypal",
-            "amount": amount
+            "amount": amount,
+            "paypal_email": payout_method.details.get("email"),
+            "message": "PayPal payout queued for manual processing"
         }
     
     else:
         return {
-            "status": "manual",
+            "status": "pending_manual",
             "method": payout_method.method,
             "amount": amount,
             "message": "Manual payout required"

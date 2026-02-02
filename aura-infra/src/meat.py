@@ -889,6 +889,28 @@ async def get_payout_method(
     }
 
 
+@router.get("/my/stripe-onboarding")
+async def get_stripe_onboarding_link(
+    x_worker_id: str = Header(..., alias="X-Worker-ID")
+):
+    """Get Stripe Connect onboarding link to complete payout setup"""
+    from meat_payments import get_worker_onboarding_link
+    
+    if x_worker_id not in workers_db:
+        raise HTTPException(404, "Worker not found")
+    
+    result = await get_worker_onboarding_link(x_worker_id)
+    
+    if not result.get("success"):
+        raise HTTPException(400, result.get("error", "Failed to generate onboarding link"))
+    
+    return {
+        "onboarding_url": result["onboarding_url"],
+        "expires_at": result["expires_at"],
+        "message": "Complete this form to start receiving payouts."
+    }
+
+
 # ============== Platform Stats ==============
 
 @router.get("/platform/payment-stats")
